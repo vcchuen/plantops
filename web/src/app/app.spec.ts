@@ -13,13 +13,14 @@ describe('App shell', () => {
     });
   });
 
-  it('renders the toolbar title, landmarks and the System status link', async () => {
+  it('renders the toolbar title, landmarks and the nav links', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
 
     expect(el.querySelector('header')?.textContent).toContain('PlantOps');
     expect(el.querySelector('nav[aria-label="Primary"]')?.textContent).toContain('System status');
+    expect(el.querySelector('nav[aria-label="Primary"]')?.textContent).toContain('Assets');
     expect(el.querySelector('main#main-content')).not.toBeNull();
     expect(el.querySelector('.skip-link')).not.toBeNull();
   });

@@ -1,0 +1,64 @@
+<p><a routerLink="/assets">&larr; Back to assets</a></p>
+
+@if (asset.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading asset" />
+}
+
+@if (notFound()) {
+  <h1>Asset not found</h1>
+  <p>No asset with that id exists. <a routerLink="/assets">Return to the asset list</a>.</p>
+} @else if (errorMessage(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else if (asset.hasValue()) {
+  @let a = asset.value();
+  <h1>{{ a.tag }} · {{ a.name }}</h1>
+
+  @if (a.status === 'Decommissioned') {
+    <p class="banner" role="status">
+      <mat-icon aria-hidden="true">block</mat-icon>
+      <span>
+        Decommissioned
+        @if (a.decommissionedOn) {
+          on {{ a.decommissionedOn | date: 'mediumDate' }}
+        }
+        @if (a.decommissionReason) {
+          &mdash; {{ a.decommissionReason }}
+        }
+      </span>
+    </p>
+  }
+
+  <dl>
+    <dt>Tag</dt>
+    <dd>{{ a.tag }}</dd>
+    <dt>Name</dt>
+    <dd>{{ a.name }}</dd>
+    <dt>Manufacturer</dt>
+    <dd>{{ a.manufacturer }}</dd>
+    <dt>Model</dt>
+    <dd>{{ a.model }}</dd>
+    <dt>Serial number</dt>
+    <dd>{{ a.serialNumber ?? '—' }}</dd>
+    <dt>Line</dt>
+    <dd>{{ a.lineName }} ({{ a.lineCode }})</dd>
+    <dt>Station</dt>
+    <dd>{{ a.station }}</dd>
+    <dt>Criticality</dt>
+    <dd>{{ a.criticality }} · {{ criticalityLabels[a.criticality].description }}</dd>
+    <dt>Status</dt>
+    <dd>{{ statusLabels[a.status] }}</dd>
+    <dt>Commissioned</dt>
+    <dd>{{ a.commissionedOn | date: 'mediumDate' }}</dd>
+    @if (a.decommissionedOn) {
+      <dt>Decommissioned</dt>
+      <dd>{{ a.decommissionedOn | date: 'mediumDate' }}</dd>
+    }
+    @if (a.decommissionReason) {
+      <dt>Decommission reason</dt>
+      <dd>{{ a.decommissionReason }}</dd>
+    }
+  </dl>
+}

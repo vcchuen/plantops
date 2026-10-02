@@ -5,7 +5,12 @@
 <header>
   <mat-toolbar color="primary">
     @if (isHandset()) {
-      <button mat-icon-button type="button" aria-label="Toggle navigation" (click)="drawer.toggle()">
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Toggle navigation"
+        (click)="drawer.toggle()"
+      >
         <mat-icon aria-hidden="true">menu</mat-icon>
       </button>
     }
@@ -33,6 +38,17 @@
           (click)="isHandset() && drawer.close()"
         >
           System status
+        </a>
+        <a
+          mat-list-item
+          routerLink="/assets"
+          routerLinkActive
+          #assets="routerLinkActive"
+          ariaCurrentWhenActive="page"
+          [activated]="assets.isActive"
+          (click)="isHandset() && drawer.close()"
+        >
+          Assets
         </a>
       </mat-nav-list>
     </nav>
