@@ -26,7 +26,10 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - Subagents must create files with the Write tool (not Bash heredocs) so they go through the gate.
 
 ## Notes for upcoming milestones
-- M2: remove the direct `Microsoft.Data.SqlClient` 7.x reference and replace `SqlServerHealthCheck` with `AddDbContextCheck`. EF Core 9 brings its own SqlClient, and one version is better than two. Switch the compose connection string from `Database=master` to `PlantOps`.
+- EF Core 9 mapping rule (M2): value objects in the domain API, plain columns in the persistence mapping where EF 9 must index or query them. Never hand-write indexes or FKs into migrations; the snapshot is the source of truth (`dotnet ef migrations has-pending-model-changes` must say "No changes").
+- After `dotnet ef migrations add`, change the generated migration class from `public` to `internal`, or the architecture test fails.
+- Integration tests skip locally unless `PLANTOPS_INTEGRATION_TESTS=1`. CI runs them, so push and check CI to validate them.
+- Merging PRs is blocked for Claude by the user's permission rules. Stack branches and let the user merge.
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -34,8 +37,8 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 ## Progress
 | # | Milestone | Status |
 |---|-----------|--------|
-| 1 | Foundation & walking skeleton | done (PR #1, awaiting user review) |
-| 2 | Assets module (DDD basics) | — |
+| 1 | Foundation & walking skeleton | done (PR #1 — user must merge; auto-merge is blocked by permissions) |
+| 2 | Assets module (DDD basics) | done (PR #2, stacked on m1-foundation) |
 | 3 | Identity & authorisation (Keycloak/OIDC) | — |
 | 4 | Work order lifecycle | — |
 | 5 | Inventory + events between modules (outbox) | — |
