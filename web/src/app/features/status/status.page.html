@@ -1,0 +1,57 @@
+<div class="page-header">
+  <h1>System status</h1>
+  <button mat-flat-button type="button" (click)="health.reload()" [disabled]="health.isLoading()">
+    <mat-icon aria-hidden="true">refresh</mat-icon>
+    Refresh
+  </button>
+</div>
+
+@if (health.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Checking system status" />
+}
+
+<div aria-live="polite" class="status-region">
+  @if (report(); as r) {
+    <p class="overall">
+      Overall:
+      <mat-chip [class]="'status-' + r.status.toLowerCase()">
+        <mat-icon matChipAvatar aria-hidden="true">{{ icon(r.status) }}</mat-icon>
+        {{ r.status }}
+      </mat-chip>
+      <span class="duration">checked in {{ r.totalDurationMs }} ms</span>
+    </p>
+
+    <table mat-table [dataSource]="r.checks" aria-label="Dependency checks">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Check</th>
+        <td mat-cell *matCellDef="let c">{{ c.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let c">
+          <span [class]="'status-text status-' + c.status.toLowerCase()">
+            <mat-icon aria-hidden="true">{{ icon(c.status) }}</mat-icon>
+            {{ c.status }}
+          </span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Details</th>
+        <td mat-cell *matCellDef="let c">{{ c.description ?? '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="durationMs">
+        <th mat-header-cell *matHeaderCellDef>Duration (ms)</th>
+        <td mat-cell *matCellDef="let c">{{ c.durationMs }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  } @else if (unreachable()) {
+    <p class="unreachable" role="alert">
+      <mat-icon aria-hidden="true">cloud_off</mat-icon>
+      API unreachable. Check that the backend is running, then press Refresh.
+    </p>
+  } @else {
+    <p>Checking…</p>
+  }
+</div>

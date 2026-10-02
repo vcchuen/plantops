@@ -1,0 +1,51 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.overall {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.duration {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.status-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// Colour is a reinforcement only; every status also has an icon and its text label.
+.status-healthy {
+  --mat-chip-elevated-container-color: var(--mat-sys-tertiary-container);
+  --mat-chip-label-text-color: var(--mat-sys-on-tertiary-container);
+}
+
+.status-degraded {
+  --mat-chip-elevated-container-color: var(--mat-sys-secondary-container);
+  --mat-chip-label-text-color: var(--mat-sys-on-secondary-container);
+}
+
+.status-unhealthy {
+  --mat-chip-elevated-container-color: var(--mat-sys-error-container);
+  --mat-chip-label-text-color: var(--mat-sys-on-error-container);
+}
+
+.unreachable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mat-sys-error);
+}
+
+table {
+  width: 100%;
+}

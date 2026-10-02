@@ -1,0 +1,41 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 1000;
+  padding: 8px 16px;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+
+  &:focus {
+    top: 8px;
+  }
+}
+
+.shell {
+  flex: 1;
+}
+
+mat-sidenav {
+  width: 240px;
+}
+
+main {
+  padding: 16px;
+  max-width: 960px;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
