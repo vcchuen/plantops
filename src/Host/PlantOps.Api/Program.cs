@@ -1,5 +1,7 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using PlantOps.Api.Health;
+using PlantOps.Api.Http;
 using PlantOps.Modules.Assets;
 using PlantOps.Modules.Identity;
 using PlantOps.Modules.Inventory;
@@ -7,10 +9,12 @@ using PlantOps.Modules.WorkOrders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
-builder.Services.AddHealthChecks()
-    .AddCheck<SqlServerHealthCheck>("sqlserver", tags: ["ready"]);
+builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+// Modules add their own readiness checks (tagged "ready") when registered.
+builder.Services.AddHealthChecks();
 
 builder.Services
     .AddAssetsModule(builder.Configuration)

@@ -72,6 +72,18 @@ public class HostTests
     }
 
     [Fact]
+    public async Task Unbindable_query_value_returns_400_problem_not_500()
+    {
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/assets?criticality=Z", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
     public async Task Unknown_non_api_route_falls_back_to_index_html()
     {
         var webRoot = Directory.CreateTempSubdirectory("plantops-wwwroot-").FullName;

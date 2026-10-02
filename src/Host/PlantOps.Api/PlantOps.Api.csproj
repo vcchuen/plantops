@@ -8,10 +8,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <!-- Design-time only: lets `dotnet ef` use this project as the startup project. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlocks\PlantOps.SharedKernel\PlantOps.SharedKernel.csproj" />
     <ProjectReference Include="..\..\Modules\Assets\PlantOps.Modules.Assets\PlantOps.Modules.Assets.csproj" />
     <ProjectReference Include="..\..\Modules\WorkOrders\PlantOps.Modules.WorkOrders\PlantOps.Modules.WorkOrders.csproj" />
     <ProjectReference Include="..\..\Modules\Inventory\PlantOps.Modules.Inventory\PlantOps.Modules.Inventory.csproj" />
