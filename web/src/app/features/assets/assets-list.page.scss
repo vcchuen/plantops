@@ -1,0 +1,41 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.search {
+  flex: 1 1 220px;
+}
+
+table {
+  width: 100%;
+}
+
+.empty {
+  padding: 24px 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mat-sys-error);
+}
+
+// Colour only reinforces; the letter and text label carry the meaning.
+.crit-a {
+  --mat-chip-elevated-container-color: var(--mat-sys-error-container);
+  --mat-chip-label-text-color: var(--mat-sys-on-error-container);
+}
+
+.crit-b {
+  --mat-chip-elevated-container-color: var(--mat-sys-secondary-container);
+  --mat-chip-label-text-color: var(--mat-sys-on-secondary-container);
+}
+
+.crit-c {
+  --mat-chip-elevated-container-color: var(--mat-sys-surface-container-high);
+  --mat-chip-label-text-color: var(--mat-sys-on-surface);
+}
