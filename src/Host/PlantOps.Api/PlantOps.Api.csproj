@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- Local dev connection string lives here, not in appsettings:
+         dotnet user-secrets set "ConnectionStrings:PlantOps" "..." (run in src/Host/PlantOps.Api) -->
+    <UserSecretsId>plantops-api-9c1f6a0e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Assets\PlantOps.Modules.Assets\PlantOps.Modules.Assets.csproj" />
+    <ProjectReference Include="..\..\Modules\WorkOrders\PlantOps.Modules.WorkOrders\PlantOps.Modules.WorkOrders.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\PlantOps.Modules.Inventory\PlantOps.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\PlantOps.Modules.Identity\PlantOps.Modules.Identity.csproj" />
+  </ItemGroup>
+
+</Project>
