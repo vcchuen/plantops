@@ -58,19 +58,27 @@ M4's SLA policy keys off it.
 ## Decision 2 — Value objects and how EF Core maps them
 **Primitive obsession** means passing `string tag`, `Guid lineId` and `string station` around everywhere. The validation then has to be repeated (or forgotten) at every call site, and `Relocate(stationName, lineId)` compiles even with the arguments swapped.
 
-| Concept | Type | EF Core 9 mapping |
+**Rule: value objects in the domain's public API, plain columns in the persistence mapping wherever EF Core 9 needs to index or query them.**
+
+| Concept | Domain type | EF Core 9 mapping (final) |
 |---|---|---|
 | `AssetId`, `ProductionLineId` | `readonly record struct` wrapping a `Guid` | Value converter. The column is still `uniqueidentifier` |
-| `AssetTag` | `sealed record` with private constructor + `Create()` | Value converter to `nvarchar(20)` |
-| `Location` (LineId + Station) | `sealed record` | **Complex type** (EF 8+): two columns on the `Assets` table, no identity, compared by value |
-| `Decommissioning` (On + Reason) | `sealed record` | Complex type. Its absence means the asset is in service (see below) |
+| `AssetTag` | `sealed record` with private constructor + `Create()` | Private `string _tag` field mapped to column `Tag`. `public AssetTag Tag => AssetTag.Create(_tag)` sits on top, ignored by EF |
+| `Location` (LineId + Station) | `sealed record` | Two scalar properties (`LineId`, `Station`). `public Location Location => new(LineId, Station)` is ignored by EF |
+| Decommissioning (On + Reason) | — | Two nullable columns |
 
-**Why complex types, not owned types?**
-- Owned types (the older approach) secretly have a shadow key and identity semantics. That makes them entity-like, which is the wrong model for a value object.
-- Complex types are genuinely value-based.
-- **Limitation in EF Core 9:** a complex type can't be optional. So "not decommissioned" is modelled as two nullable columns on the Asset itself (`DecommissionedOn`, `DecommissionReason`), with a domain method that returns the value object. This is a known limitation; it's fixed in EF Core 10, which supports optional complex types.
+**How we got here.** Each obvious option failed on EF Core 9, and we verified every failure:
+1. **Complex type for `Location`/`AssetTag`.** EF 9 can't declare an index or a foreign key on a complex-type property (`HasIndex(a => a.Tag.Value)` throws).
+   - A first draft hand-wrote the indexes and FK into the migration. **We rejected that:** those operations aren't in the model snapshot, so the next `migrations add` can't see them, and a regenerated migration would silently drop `UX_Assets_Tag`, the very index that settles the tag race.
+   - **Rule: the snapshot is the single source of truth for the schema.**
+2. **Value converter for `AssetTag`.** The unique index works, but the prefix search doesn't translate:
+   - `EF.Property<string>(a, "Tag")` throws "Invalid cast from String to AssetTag".
+   - An explicit-operator cast translates to `CAST([Tag] AS nvarchar(max)) LIKE ...`, which **can't use the index**.
+3. **The final mapping:** a private string field with the value object exposed on top. The column is a real string, so EF generates `[Tag] LIKE @p ESCAPE N'\'`, which can seek on `UX_Assets_Tag`. Every index and the FK are declared in the model.
 
-**Why not a value converter for `Location`?** A converter maps one property to one column. Location is two columns, and we want `Location.LineId` to be indexable and filterable in SQL.
+**Why not owned types?** Owned types do support indexes, but they're entities underneath, with a shadow key and identity semantics. That's the wrong model for a value object, and they're heavier than two scalar columns.
+
+**Optional complex types** (EF 10) would let `Decommissioning` be a value object. That's on the list for the .NET 10 upgrade (ADR-0003).
 
 ## Decision 3 — Reporting rule violations
 
