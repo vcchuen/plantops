@@ -12,6 +12,7 @@ WORKDIR /src
 # Manifests first so the restore layer is cached until a csproj or package version changes.
 COPY global.json Directory.Build.props Directory.Packages.props PlantOps.slnx ./
 COPY src/Host/PlantOps.Api/PlantOps.Api.csproj src/Host/PlantOps.Api/
+COPY src/BuildingBlocks/PlantOps.SharedKernel/PlantOps.SharedKernel.csproj src/BuildingBlocks/PlantOps.SharedKernel/
 COPY src/Modules/Assets/PlantOps.Modules.Assets/PlantOps.Modules.Assets.csproj src/Modules/Assets/PlantOps.Modules.Assets/
 COPY src/Modules/Assets/PlantOps.Modules.Assets.Contracts/PlantOps.Modules.Assets.Contracts.csproj src/Modules/Assets/PlantOps.Modules.Assets.Contracts/
 COPY src/Modules/WorkOrders/PlantOps.Modules.WorkOrders/PlantOps.Modules.WorkOrders.csproj src/Modules/WorkOrders/PlantOps.Modules.WorkOrders/

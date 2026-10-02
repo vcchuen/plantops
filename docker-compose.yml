@@ -25,9 +25,11 @@ services:
       sqlserver:
         condition: service_healthy
     environment:
-      # Database=master until M2: EF migrations will create the PlantOps database, then this switches to it.
+      # The PlantOps database does not exist yet on first start: ApplyMigrationsOnStartup lets the Assets
+      # module create it and migrate it (EF's Migrate creates a missing database). Azure uses migration bundles instead.
       # TrustServerCertificate=True accepts the container's self-signed cert; acceptable for local compose only.
-      ConnectionStrings__PlantOps: "Server=sqlserver,1433;Database=master;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      ConnectionStrings__PlantOps: "Server=sqlserver,1433;Database=PlantOps;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Database__ApplyMigrationsOnStartup: "true"
 
 volumes:
   sqlserver-data:
