@@ -44,13 +44,15 @@ public class AssetsApiTests(SqlServerFixture fixture)
 
     private static string Today() => DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
 
-    private static async Task AssertProblem(HttpResponseMessage response, HttpStatusCode status)
+    // Returns the parsed body: TestServer response streams can be read only once.
+    private static async Task<JsonElement> AssertProblem(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         var problem = await ReadJson(response);
         Assert.Equal((int)status, problem.GetProperty("status").GetInt32());
         Assert.False(string.IsNullOrWhiteSpace(problem.GetProperty("detail").GetString()));
+        return problem;
     }
 
     // Registers `count` assets tagged {prefix}-01, {prefix}-02, ...; the first `onFa1` go on FA-1 with criticality A,
@@ -131,8 +133,8 @@ public class AssetsApiTests(SqlServerFixture fixture)
 
         var response = await client.PostAsJsonAsync("/api/assets", NewAssetBody(tag.ToLowerInvariant()), Ct);
 
-        await AssertProblem(response, HttpStatusCode.Conflict);
-        Assert.Contains(tag, (await ReadJson(response)).GetProperty("detail").GetString());
+        var problem = await AssertProblem(response, HttpStatusCode.Conflict);
+        Assert.Contains(tag, problem.GetProperty("detail").GetString());
     }
 
     [IntegrationFact]
