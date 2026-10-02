@@ -46,7 +46,12 @@ A "walking skeleton" is the thinnest slice that touches every layer. Ours is a s
 - The Docker image is a multi-stage build: a Node stage builds Angular, and the .NET stage copies the output into `wwwroot`.
 
 ## Decision 5 — Angular baseline
-- Standalone components only (no NgModules), zoneless change detection, `ChangeDetectionStrategy.OnPush` on every component. The ESLint rule `@angular-eslint/prefer-on-push-component-change-detection` enforces it, so "everywhere" stays true.
+- Standalone components only (no NgModules), zoneless change detection, OnPush on every component.
+- **What Angular 22 changed** (verified in the installed packages, not from memory):
+  - New apps are zoneless by default, and `zone.js` isn't even installed.
+  - **OnPush is now the default strategy.** The old `Default` strategy has been renamed `Eager`.
+- We still write `provideZonelessChangeDetection()` and `ChangeDetectionStrategy.OnPush` explicitly. That way the intent survives a framework default changing, and someone reading the code who knows Angular ≤ 21 isn't misled.
+- The ESLint rule `@angular-eslint/prefer-on-push-component-change-detection` (angular-eslint 22) **now flags components that opt out** to `Eager`. It is set to `error`, so "OnPush everywhere" can't regress quietly.
 - Signals for local state, and `httpResource` for reads. Both are stable in Angular 22, which I confirmed from the `@publicApi 22.0` tags in the shipped type definitions.
 - Angular Material for components, with lazy-loaded routes per feature.
 - Vitest for unit tests.
