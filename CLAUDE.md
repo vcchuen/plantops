@@ -23,11 +23,18 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - Ask before large downloads (Docker images, Playwright browsers). Install only Chromium for Playwright.
 - The GateGuard hook blocks the first write to each new file. Batch new files, state the facts, then retry. The user chose to keep the gate.
 - On the user's laptop, `dotnet` resolves to SDK 9.0.308. `global.json` pins 9.0.x.
+- Subagents must create files with the Write tool (not Bash heredocs) so they go through the gate.
+
+## Notes for upcoming milestones
+- M2: remove the direct `Microsoft.Data.SqlClient` 7.x reference and replace `SqlServerHealthCheck` with `AddDbContextCheck`. EF Core 9 brings its own SqlClient, and one version is better than two. Switch the compose connection string from `Database=master` to `PlantOps`.
+- Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
+- Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
+- `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
 
 ## Progress
 | # | Milestone | Status |
 |---|-----------|--------|
-| 1 | Foundation & walking skeleton | in progress |
+| 1 | Foundation & walking skeleton | done (PR #1, awaiting user review) |
 | 2 | Assets module (DDD basics) | — |
 | 3 | Identity & authorisation (Keycloak/OIDC) | — |
 | 4 | Work order lifecycle | — |
