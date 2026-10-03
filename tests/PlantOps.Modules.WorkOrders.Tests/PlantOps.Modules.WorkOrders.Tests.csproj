@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- xUnit v3 test projects are executables; the runner starts them directly. -->
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Two tiny shared files are linked rather than moved into a third test-utils project: a project would add a
+         solution entry and a reference for ~80 lines, and the Assets test project already links TestAuth the same way. -->
+    <Compile Include="..\PlantOps.Api.Tests\Support\TestAuth.cs" Link="Support\TestAuth.cs" />
+    <Compile Include="..\PlantOps.Modules.Assets.Tests\Integration\IntegrationFactAttribute.cs" Link="Support\IntegrationFactAttribute.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Api project brings every module in transitively; the modules expose their internals to this assembly. -->
+    <ProjectReference Include="..\..\src\Host\PlantOps.Api\PlantOps.Api.csproj" />
+  </ItemGroup>
+
+</Project>
