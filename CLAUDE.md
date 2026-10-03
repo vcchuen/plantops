@@ -42,6 +42,8 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - Known gap: PM schedules aren't auto-deactivated when an asset is decommissioned (event-driven fix noted for "next").
 - M7: Reporting module (reporting.WorkOrderFacts) projected from WorkOrderCompletedIntegrationEvent; rebuild via POST /api/reports/rebuild. The perf harness (perf/PlantOps.Perf) runs in CI (perf.yml on PR paths perf/** or dispatch). Measured numbers live in docs/study/07 and cite run 37091237887. The covering index was adopted from that run; compiled query NOT adopted (within error bars).
 - Next is the review-me branch: 5-8 planted problems, never reveal their locations. Base it on m7-reporting.
+- M8: E2E (web/e2e, Playwright + axe) runs only in CI via e2e.yml against `docker compose up --wait`; it has validated the Keycloak wiring. Demo seed via `Seed:Demo=true` (Host/Seeding). Security headers/CSP, rate limits (config RateLimiting:*; fixtures lift them), SecurityEvents 1001-1006. OWASP 2025 map: docs/security/owasp-top-10.md.
+- API contract drift has happened twice (M4, M8). Top "next" item: generate the TS client from OpenAPI.
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -56,8 +58,8 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 | 5 | Inventory + events between modules (outbox) | done (PR #5, stacked on m4-workorders) |
 | 6 | SLA escalation + preventive maintenance | done (PR #6, stacked on m5-inventory) |
 | 7 | Reporting (CQRS read side) + EF performance | done (PR #7, stacked on m6-sla-pm) |
-| — | `review-me` branch | — |
-| 8 | Test pyramid + OWASP | — |
+| — | `review-me` branch | open as PR #8 (do not merge); answer key in Claude memory, not in the repo |
+| 8 | Test pyramid + OWASP | done (PR #9, stacked on m7-reporting) |
 | 9 | Azure (Bicep, Actions deploy) | — |
 | 10 | README / portfolio polish | — |
 
