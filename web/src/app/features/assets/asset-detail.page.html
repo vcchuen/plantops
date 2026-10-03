@@ -62,6 +62,45 @@
     }
   </dl>
 
+  <h2>Maintenance history</h2>
+  @if (maintenanceError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  } @else if (maintenance.hasValue()) {
+    @if (maintenance.value().length === 0) {
+      <p class="empty">No completed maintenance yet</p>
+    } @else {
+      <table aria-label="Maintenance history">
+        <thead>
+          <tr>
+            <th scope="col">Work order</th>
+            <th scope="col">Title</th>
+            <th scope="col">Technician</th>
+            <th scope="col">Completed</th>
+            <th scope="col" class="num">Downtime</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of maintenance.value(); track m.workOrderId) {
+            <tr>
+              <td>
+                <a [routerLink]="['/work-orders', m.workOrderId]">{{ m.number }}</a>
+              </td>
+              <td>{{ m.title }}</td>
+              <td>{{ m.technicianName ?? '—' }}</td>
+              <td>{{ m.completedAt | date: 'medium' }}</td>
+              <td class="num">
+                {{ m.downtimeMinutes === null ? '—' : m.downtimeMinutes + ' min' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+
   <h2>History</h2>
   @if (historyError(); as message) {
     <p class="error" role="alert">

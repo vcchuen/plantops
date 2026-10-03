@@ -4,7 +4,25 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { WorkOrderDetailPage } from './work-order-detail.page';
+import { signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
+import { SessionStore } from '../../core/auth/session.store';
+import { ReservationItem } from '../inventory/inventory.models';
 import { WorkOrderAction, WorkOrderDetail } from './work-orders.models';
+
+const reservation = (over: Partial<ReservationItem> = {}): ReservationItem => ({
+  id: 'r1',
+  partId: 'p1',
+  partNumber: 'FDR-8MM-001',
+  partName: 'Feeder 8mm',
+  unit: 'pcs',
+  quantity: 2,
+  status: 'Active',
+  reservedAt: '2026-10-03T14:00:00Z',
+  reservedByName: 'Tom Tech',
+  ...over,
+});
 
 const detail = (over: Partial<WorkOrderDetail> = {}): WorkOrderDetail => ({
   id: 'w1',
@@ -64,9 +82,19 @@ describe('WorkOrderDetailPage', () => {
     fixture.detectChanges();
   }
 
-  function load(body: WorkOrderDetail = detail(), etag = '"AAAAAAAB"') {
+  const reservationsReq = () =>
+    http.expectOne(
+      (r) => r.url === '/api/inventory/reservations' && r.params.get('workOrderId') === 'w1',
+    );
+
+  function load(
+    body: WorkOrderDetail = detail(),
+    etag = '"AAAAAAAB"',
+    reservations: ReservationItem[] = [],
+  ) {
     http.expectOne(detailUrl).flush(body, { headers: { ETag: etag } });
     http.expectOne(historyUrl).flush(history);
+    reservationsReq().flush(reservations);
   }
 
   // The command's finally-block starts a reload, which counts as pending work, so whenStable()
@@ -76,10 +104,20 @@ describe('WorkOrderDetailPage', () => {
   const buttons = () =>
     Array.from(el.querySelectorAll('.actions button')).map((b) => b.textContent?.trim());
 
+  const supervisor = signal(false);
+  const reserveButton = () =>
+    Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Reserve part');
+
   beforeEach(() => {
+    supervisor.set(false);
     TestBed.configureTestingModule({
       imports: [WorkOrderDetailPage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: SessionStore, useValue: { isSupervisorOrAdmin: supervisor } },
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -206,6 +244,7 @@ describe('WorkOrderDetailPage', () => {
       .expectOne(detailUrl)
       .flush({ title: 'Not Found' }, { status: 404, statusText: 'Not Found' });
     http.expectOne(historyUrl).flush(null, { status: 404, statusText: 'Not Found' });
+    reservationsReq().flush([]);
     await fixture.whenStable();
     expect(el.textContent).toContain('Work order not found');
   });
@@ -239,6 +278,123 @@ describe('WorkOrderDetailPage', () => {
     await fixture.whenStable();
     expect(el.querySelector('app-sla-badge [aria-label="No SLA"]')).not.toBeNull();
     expect(el.querySelector('.countdown')).toBeNull();
+  });
+
+  describe('parts', () => {
+    it('lists reservations with a status label', async () => {
+      create();
+      load(detail(), '"E"', [reservation(), reservation({ id: 'r2', status: 'Consumed' })]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const rows = el.querySelectorAll('table[aria-label="Reserved parts"] tbody tr');
+      expect(rows.length).toBe(2);
+      expect(rows[0].textContent).toContain('FDR-8MM-001');
+      expect(rows[0].textContent).toContain('Reserved');
+      expect(rows[1].textContent).toContain('Consumed');
+    });
+
+    it.each([
+      ['assigned technician (start allowed)', 'Assigned', ['start', 'cancel'], false, true],
+      ['working technician (complete allowed)', 'InProgress', ['complete'], false, true],
+      ['unrelated user', 'Assigned', ['cancel'], false, false],
+      ['supervisor on an assigned order', 'Assigned', ['cancel'], true, true],
+      ['supervisor on a submitted order', 'Submitted', ['approve'], true, false],
+      ['supervisor on a completed order', 'Completed', ['close'], true, false],
+    ] as const)('reserve button: %s', async (_name, status, actions, isSupervisor, visible) => {
+      supervisor.set(isSupervisor);
+      create();
+      load(detail({ status, allowedActions: [...actions] as WorkOrderAction[] }));
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(reserveButton() !== undefined).toBe(visible);
+    });
+
+    it('shows the stock note once the order is completed or closed', async () => {
+      create();
+      load(detail({ status: 'Completed', allowedActions: ['close'] }));
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(el.textContent).toContain('Stock is updated shortly after completion.');
+    });
+
+    it('reloads reservations after the reserve dialog reports success', async () => {
+      create();
+      load();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const open = vi
+        .spyOn(TestBed.inject(MatDialog), 'open')
+        .mockReturnValue({ afterClosed: () => of(true) } as never);
+
+      reserveButton()?.click();
+      await settle();
+
+      expect(open).toHaveBeenCalled();
+      reservationsReq().flush([reservation()]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(el.querySelectorAll('table[aria-label="Reserved parts"] tbody tr').length).toBe(1);
+    });
+
+    it('does not reload when the dialog is dismissed', async () => {
+      create();
+      load();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      vi.spyOn(TestBed.inject(MatDialog), 'open').mockReturnValue({
+        afterClosed: () => of(undefined),
+      } as never);
+
+      reserveButton()?.click();
+      await settle();
+      http.expectNone((r) => r.url === '/api/inventory/reservations');
+    });
+
+    it('releases an active reservation then reloads the list', async () => {
+      create();
+      load(detail(), '"E"', [reservation(), reservation({ id: 'r2', status: 'Consumed' })]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const releaseButtons = Array.from(el.querySelectorAll('tbody button'));
+      expect(releaseButtons.length).toBe(1); // only the Active one
+      (releaseButtons[0] as HTMLButtonElement).click();
+
+      const req = http.expectOne('/api/inventory/reservations/r1/release');
+      expect(req.request.method).toBe('POST');
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      await settle();
+
+      reservationsReq().flush([reservation({ status: 'Released' })]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(el.querySelector('table[aria-label="Reserved parts"]')?.textContent).toContain(
+        'Released',
+      );
+      expect(el.querySelectorAll('tbody button').length).toBe(0);
+    });
+
+    it('shows the problem detail when release fails', async () => {
+      create();
+      load(detail(), '"E"', [reservation()]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      (el.querySelector('tbody button') as HTMLButtonElement).click();
+      http
+        .expectOne('/api/inventory/reservations/r1/release')
+        .flush(
+          { title: 'Forbidden', detail: 'Not your work order' },
+          { status: 403, statusText: 'Forbidden' },
+        );
+      await settle();
+      reservationsReq().flush([reservation()]);
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(el.querySelector('[role="alert"]')?.textContent).toContain('Not your work order');
+    });
   });
 
   it('does not show a countdown for a settled SLA', async () => {

@@ -21,6 +21,7 @@ internal sealed class WorkOrdersDbContext(DbContextOptions<WorkOrdersDbContext> 
         modelBuilder.HasSequence<int>(NumberSequence, Schema);
         modelBuilder.ApplyConfiguration(new WorkOrderConfiguration());
         modelBuilder.ApplyAuditEntries();
+        modelBuilder.ApplyOutbox();
     }
 }
 

@@ -99,6 +99,72 @@
     }
   </dl>
 
+  <h2>Parts</h2>
+  @if (canReserve()) {
+    <p>
+      <button mat-stroked-button type="button" (click)="reservePart()">Reserve part</button>
+    </p>
+  }
+  @if (isFinished()) {
+    <p class="note">Stock is updated shortly after completion.</p>
+  }
+  @if (partsError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  }
+  @if (reservationsError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  } @else if (reservations.hasValue()) {
+    @if (reservations.value().length === 0) {
+      <p class="note">No parts reserved</p>
+    } @else {
+      <table aria-label="Reserved parts">
+        <thead>
+          <tr>
+            <th scope="col">Part</th>
+            <th scope="col" class="num">Quantity</th>
+            <th scope="col">Status</th>
+            <th scope="col">Reserved by</th>
+            @if (canReserve()) {
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of reservations.value(); track r.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/inventory', r.partId]">{{ r.partNumber }}</a> — {{ r.partName }}
+              </td>
+              <td class="num">{{ r.quantity }} {{ r.unit }}</td>
+              <td>{{ reservationStatusLabels[r.status] }}</td>
+              <td>{{ r.reservedByName }}</td>
+              @if (canReserve()) {
+                <td>
+                  @if (r.status === 'Active') {
+                    <button
+                      mat-button
+                      type="button"
+                      [attr.aria-label]="'Release ' + r.partNumber"
+                      (click)="release(r)"
+                    >
+                      Release
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+
   <h2>History</h2>
   @if (historyError(); as message) {
     <p class="error" role="alert">

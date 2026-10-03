@@ -187,7 +187,18 @@ internal sealed class WorkOrder : AggregateRoot
         Status = WorkOrderStatus.Completed;
         CompletedAt = now;
         Resolution = trimmed;
-        Raise(new WorkOrderCompleted(Id.Value, trimmed));
+        Raise(new WorkOrderCompleted(
+            Id.Value,
+            trimmed,
+            FormatNumber(Number),
+            AssetId,
+            Title,
+            SubmittedAt,
+            StartedAt!.Value, // InProgress implies Start() ran
+            now,
+            // Whoever completes it, the job belongs to the assigned technician (an admin may complete on their behalf).
+            AssignedToName ?? actor.Name,
+            AssetDown));
     }
 
     public void Close(Actor actor, DateTimeOffset now)
@@ -208,7 +219,7 @@ internal sealed class WorkOrder : AggregateRoot
 
         Status = WorkOrderStatus.Cancelled;
         CancellationReason = trimmed;
-        Raise(new WorkOrderCancelled(Id.Value, trimmed));
+        Raise(new WorkOrderCancelled(Id.Value, FormatNumber(Number), trimmed, now));
     }
 
     public static string FormatNumber(int number) => $"WO-{number:D6}";

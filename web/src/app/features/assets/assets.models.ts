@@ -43,6 +43,16 @@ export interface AssetDetail {
   decommissionReason: string | null;
 }
 
+export interface MaintenanceEntry {
+  workOrderId: string;
+  number: string;
+  title: string;
+  resolution: string | null;
+  technicianName: string | null;
+  completedAt: string;
+  downtimeMinutes: number | null;
+}
+
 export const CRITICALITY_LABELS: Record<Criticality, { short: string; description: string }> = {
   A: { short: 'Stops line', description: 'A: failure stops the line' },
   B: { short: 'Degrades line', description: 'B: failure degrades the line' },

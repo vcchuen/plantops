@@ -30,6 +30,26 @@ dd {
   margin: 16px 0;
 }
 
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.num {
+  text-align: right;
+}
+
+.note {
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .error {
   display: flex;
   align-items: center;

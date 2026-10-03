@@ -17,6 +17,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/PlantOps.Api.Tests/PlantOps.Api.Tests.csproj" />
     <Project Path="tests/PlantOps.Modules.Assets.Tests/PlantOps.Modules.Assets.Tests.csproj" />
+    <Project Path="tests/PlantOps.Modules.Inventory.Tests/PlantOps.Modules.Inventory.Tests.csproj" />
     <Project Path="tests/PlantOps.Modules.WorkOrders.Tests/PlantOps.Modules.WorkOrders.Tests.csproj" />
   </Folder>
 </Solution>

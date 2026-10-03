@@ -70,6 +70,42 @@ namespace PlantOps.Modules.WorkOrders.Infrastructure.Migrations
                     b.ToTable("AuditEntries", "workorders");
                 });
 
+            modelBuilder.Entity("PlantOps.BuildingBlocks.Infrastructure.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedAt", "OccurredAt")
+                        .HasDatabaseName("IX_OutboxMessages_Pending")
+                        .HasFilter("[ProcessedAt] IS NULL");
+
+                    b.ToTable("OutboxMessages", "workorders");
+                });
+
             modelBuilder.Entity("PlantOps.Modules.WorkOrders.Domain.WorkOrder", b =>
                 {
                     b.Property<Guid>("Id")

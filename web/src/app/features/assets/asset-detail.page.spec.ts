@@ -51,9 +51,59 @@ describe('AssetDetailPage', () => {
     },
   ];
 
+  const maintenance = [
+    {
+      workOrderId: 'w1',
+      number: 'WO-000001',
+      title: 'Replace nozzle',
+      resolution: 'Swapped nozzle',
+      technicianName: 'Tom Tech',
+      completedAt: '2026-09-01T10:00:00Z',
+      downtimeMinutes: 45,
+    },
+    {
+      workOrderId: 'w2',
+      number: 'WO-000002',
+      title: 'Lubricate rails',
+      resolution: null,
+      technicianName: null,
+      completedAt: '2026-08-01T10:00:00Z',
+      downtimeMinutes: null,
+    },
+  ];
+  const flushMaintenance = (body: unknown[] = []) =>
+    http.expectOne('/api/assets/a1/maintenance').flush(body);
+
+  it('renders the maintenance history with downtime or a dash', async () => {
+    http.expectOne('/api/assets/a1').flush(asset);
+    http.expectOne('/api/assets/a1/history').flush([]);
+    flushMaintenance(maintenance);
+    await fixture.whenStable();
+
+    const rows = el.querySelectorAll('table[aria-label="Maintenance history"] tbody tr');
+    expect(rows.length).toBe(2);
+    expect(rows[0].querySelector('a')?.getAttribute('href')).toBe('/work-orders/w1');
+    expect(rows[0].textContent).toContain('WO-000001');
+    expect(rows[0].textContent).toContain('Replace nozzle');
+    expect(rows[0].textContent).toContain('Tom Tech');
+    expect(rows[0].textContent).toContain('45 min');
+    expect(rows[1].textContent).toContain('—');
+  });
+
+  it('says so when there is no maintenance history', async () => {
+    http.expectOne('/api/assets/a1').flush(asset);
+    http.expectOne('/api/assets/a1/history').flush([]);
+    flushMaintenance();
+    await fixture.whenStable();
+
+    expect(el.textContent).toContain('Maintenance history');
+    expect(el.textContent).toContain('No completed maintenance yet');
+  });
+
   it('renders the fields in a definition list', async () => {
     http.expectOne('/api/assets/a1').flush(asset);
     http.expectOne('/api/assets/a1/history').flush(history);
+    flushMaintenance();
     await fixture.whenStable();
 
     expect(el.querySelector('h1')?.textContent).toContain('SMT-001');
@@ -69,6 +119,7 @@ describe('AssetDetailPage', () => {
   it('renders the history timeline', async () => {
     http.expectOne('/api/assets/a1').flush(asset);
     http.expectOne('/api/assets/a1/history').flush(history);
+    flushMaintenance();
     await fixture.whenStable();
 
     const items = el.querySelectorAll('ol.timeline li');
@@ -85,6 +136,7 @@ describe('AssetDetailPage', () => {
       decommissionReason: 'Replaced by NXT IV',
     });
     http.expectOne('/api/assets/a1/history').flush([]);
+    flushMaintenance();
     await fixture.whenStable();
 
     const banner = el.querySelector('.banner')?.textContent ?? '';
@@ -98,6 +150,7 @@ describe('AssetDetailPage', () => {
       .expectOne('/api/assets/a1')
       .flush({ title: 'Not Found', status: 404 }, { status: 404, statusText: 'Not Found' });
     http.expectOne('/api/assets/a1/history').flush([]);
+    flushMaintenance();
     await fixture.whenStable();
 
     expect(el.textContent).toContain('Asset not found');
@@ -108,6 +161,7 @@ describe('AssetDetailPage', () => {
   it('shows an alert for other errors', async () => {
     http.expectOne('/api/assets/a1').flush('boom', { status: 500, statusText: 'Server Error' });
     http.expectOne('/api/assets/a1/history').flush([]);
+    flushMaintenance();
     await fixture.whenStable();
 
     expect(el.querySelector('[role="alert"]')).not.toBeNull();

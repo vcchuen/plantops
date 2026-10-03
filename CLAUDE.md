@@ -36,6 +36,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - M4: domain events + `DomainEventInterceptor` (BuildingBlocks.Infrastructure) write `AuditEntries` per module schema in the same transaction; M5's outbox should extend this interceptor. WorkOrders uses rowversion + ETag/If-Match (412/428). Resource-based auth via `WorkOrderOperations.Work`. JIT user directory in `identity.Users` (upsert in OnTicketReceived).
 - Routing: there is no `/api/{**rest}` catch-all any more. The SPA fallback excludes `/api` by regex. Anonymous unknown `/api` paths return 401 (the fallback policy also covers "no endpoint"); signed-in users get a 404 problem. Integration test clients must always send a JSON body on POST commands.
 - Subagents keep using heredocs despite instructions. Check `git status` for unexpected files after each agent.
+- M5: transactional outbox (`OutboxMessages` per producing schema) plus inbox (`InboxMessages` per consuming schema) in BuildingBlocks.Infrastructure. Register events via `AddIntegrationEvent<T>` (allow-list). Integration tests drain with `IOutboxProcessor<TContext>.ProcessOnceAsync()` (the fixture sets `Outbox:PollInterval` to 1 h). The whole-app fixture lives in Inventory.Tests. Reserve uses `ConcurrencyRetry` (retry policy); WorkOrders uses 412 (refuse policy).
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -47,7 +48,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 | 2 | Assets module (DDD basics) | done (PR #2, stacked on m1-foundation) |
 | 3 | Identity & authorisation (Keycloak/OIDC) | done (PR #3, stacked on m2-assets) |
 | 4 | Work order lifecycle | done (PR #4, stacked on m3-identity) |
-| 5 | Inventory + events between modules (outbox) | — |
+| 5 | Inventory + events between modules (outbox) | done (PR #5, stacked on m4-workorders) |
 | 6 | SLA escalation + preventive maintenance | — |
 | 7 | Reporting (CQRS read side) + EF performance | — |
 | — | `review-me` branch | — |

@@ -12,6 +12,8 @@ internal sealed class AssetsDbContext(DbContextOptions<AssetsDbContext> options)
 
     public DbSet<ProductionLine> ProductionLines => Set<ProductionLine>();
 
+    public DbSet<MaintenanceRecord> MaintenanceRecords => Set<MaintenanceRecord>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         // Convention-level so the converters apply to every property of these types.
@@ -24,6 +26,8 @@ internal sealed class AssetsDbContext(DbContextOptions<AssetsDbContext> options)
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new AssetConfiguration());
         modelBuilder.ApplyConfiguration(new ProductionLineConfiguration());
+        modelBuilder.ApplyConfiguration(new MaintenanceRecordConfiguration());
         modelBuilder.ApplyAuditEntries();
+        modelBuilder.ApplyInbox();
     }
 }

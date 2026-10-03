@@ -68,6 +68,23 @@ namespace PlantOps.Modules.Assets.Infrastructure.Migrations
                     b.ToTable("AuditEntries", "assets");
                 });
 
+            modelBuilder.Entity("PlantOps.BuildingBlocks.Infrastructure.InboxMessage", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Handler")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("MessageId", "Handler");
+
+                    b.ToTable("InboxMessages", "assets");
+                });
+
             modelBuilder.Entity("PlantOps.Modules.Assets.Domain.Asset", b =>
                 {
                     b.Property<Guid>("Id")
@@ -136,6 +153,55 @@ namespace PlantOps.Modules.Assets.Infrastructure.Migrations
                         .HasDatabaseName("UX_Assets_Tag");
 
                     b.ToTable("Assets", "assets");
+                });
+
+            modelBuilder.Entity("PlantOps.Modules.Assets.Domain.MaintenanceRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CompletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("DowntimeMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Resolution")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("TechnicianName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("WorkOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkOrderId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_MaintenanceRecords_WorkOrderId");
+
+                    b.HasIndex("AssetId", "CompletedAt")
+                        .HasDatabaseName("IX_MaintenanceRecords_AssetId_CompletedAt");
+
+                    b.ToTable("MaintenanceRecords", "assets");
                 });
 
             modelBuilder.Entity("PlantOps.Modules.Assets.Domain.ProductionLine", b =>

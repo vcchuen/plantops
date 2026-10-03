@@ -28,6 +28,7 @@ internal static class AssetEndpoints
         group.MapGet("", ListAssets);
         group.MapGet("/{id:guid}", GetAsset).ProducesProblem(StatusCodes.Status404NotFound);
         group.MapGet("/{id:guid}/history", GetHistory).ProducesProblem(StatusCodes.Status404NotFound);
+        group.MapGet("/{id:guid}/maintenance", GetMaintenance).ProducesProblem(StatusCodes.Status404NotFound);
         group.MapPost("", RegisterAsset).ProducesProblem(StatusCodes.Status409Conflict)
             .RequireAuthorization(Policies.ManageAssets);
         group.MapPut("/{id:guid}/details", UpdateDetails).ProducesProblem(StatusCodes.Status404NotFound)
@@ -126,6 +127,24 @@ internal static class AssetEndpoints
         }
 
         return TypedResults.Ok(await db.ForAggregateAsync(id.ToString(), ct));
+    }
+
+    // Filled by the handler for the WorkOrders "completed" event (eventually consistent: a moment after completion).
+    private static async Task<Ok<IReadOnlyList<MaintenanceItem>>> GetMaintenance(Guid id, AssetsDbContext db, CancellationToken ct)
+    {
+        if (!await db.Assets.AnyAsync(a => a.Id == new AssetId(id), ct))
+        {
+            throw new NotFoundException($"Asset '{id}' was not found.");
+        }
+
+        IReadOnlyList<MaintenanceItem> items = await db.MaintenanceRecords
+            .AsNoTracking()
+            .Where(m => m.AssetId == id)
+            .OrderByDescending(m => m.CompletedAt)
+            .Select(m => new MaintenanceItem(m.WorkOrderId, m.Number, m.Title, m.Resolution, m.TechnicianName, m.CompletedAt, m.DowntimeMinutes))
+            .ToListAsync(ct);
+
+        return TypedResults.Ok(items);
     }
 
     private static async Task<Created<AssetDetail>> RegisterAsset(

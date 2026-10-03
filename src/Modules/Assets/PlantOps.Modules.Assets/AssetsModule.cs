@@ -8,7 +8,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PlantOps.BuildingBlocks.Infrastructure;
 using PlantOps.Modules.Assets.Contracts;
 using PlantOps.Modules.Assets.Endpoints;
+using PlantOps.Modules.Assets.Handlers;
 using PlantOps.Modules.Assets.Infrastructure;
+using PlantOps.Modules.WorkOrders.Contracts;
 
 namespace PlantOps.Modules.Assets;
 
@@ -33,6 +35,9 @@ public static class AssetsModule
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IAssetDirectory, AssetDirectory>();
+
+        // Consumer of WorkOrders' completion event (ADR-0009); resolved by the dispatcher in a new scope per message.
+        services.AddScoped<IIntegrationEventHandler<WorkOrderCompletedIntegrationEvent>, WorkOrderCompletedHandler>();
         services.AddMigrateOnStartup<AssetsDbContext>();
         services.AddHealthChecks().AddDbContextCheck<AssetsDbContext>("assets-db", tags: ["ready"]);
         return services;

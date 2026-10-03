@@ -8,4 +8,7 @@ public static class Policies
 
     /// <summary>Approve, reject, assign, close and cancel work orders. Held by <see cref="Roles.Supervisor"/> and <see cref="Roles.Admin"/>.</summary>
     public const string SuperviseWorkOrders = "workorders:supervise";
+
+    /// <summary>Register spare parts and receive stock. Held by <see cref="Roles.Supervisor"/> and <see cref="Roles.Admin"/>.</summary>
+    public const string ManageInventory = "inventory:manage";
 }

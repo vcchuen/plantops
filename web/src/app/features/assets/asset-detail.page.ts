@@ -6,7 +6,13 @@ import { HistoryEntry } from '../shared/history.models';
 import { HistoryTimeline } from '../shared/history-timeline';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { AssetDetail, CRITICALITY_LABELS, STATUS_LABELS, describeError } from './assets.models';
+import {
+  AssetDetail,
+  CRITICALITY_LABELS,
+  MaintenanceEntry,
+  STATUS_LABELS,
+  describeError,
+} from './assets.models';
 
 @Component({
   selector: 'app-asset-detail-page',
@@ -30,6 +36,13 @@ export class AssetDetailPage {
   );
   protected readonly historyError = computed(() =>
     this.history.error() ? describeError(this.history.error()) : null,
+  );
+
+  protected readonly maintenance = httpResource<MaintenanceEntry[]>(
+    () => `/api/assets/${encodeURIComponent(this.id())}/maintenance`,
+  );
+  protected readonly maintenanceError = computed(() =>
+    this.maintenance.error() ? describeError(this.maintenance.error()) : null,
   );
 
   protected readonly notFound = computed(

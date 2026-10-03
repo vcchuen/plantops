@@ -68,6 +68,17 @@
         >
           Work orders
         </a>
+        <a
+          mat-list-item
+          routerLink="/inventory"
+          routerLinkActive
+          #inventory="routerLinkActive"
+          ariaCurrentWhenActive="page"
+          [activated]="inventory.isActive"
+          (click)="isHandset() && drawer.close()"
+        >
+          Inventory
+        </a>
       </mat-nav-list>
     </nav>
   </mat-sidenav>
