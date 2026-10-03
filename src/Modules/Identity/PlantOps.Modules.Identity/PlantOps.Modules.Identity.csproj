@@ -5,6 +5,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PlantOps.Modules.Identity.Contracts\PlantOps.Modules.Identity.Contracts.csproj" />
   </ItemGroup>
 
