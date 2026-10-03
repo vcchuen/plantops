@@ -61,6 +61,15 @@ services:
       Auth__ClientId: plantops-web
       Auth__ClientSecret: ${KEYCLOAK_CLIENT_SECRET:?set it in .env}
       Auth__RequireHttpsMetadata: "false"
+      # Demo data (design 08): a believable Penang plant on an empty database. Off by default everywhere else.
+      Seed__Demo: "true"
+      # The E2E suite and a demo user click far faster than a person on a production rate limit would (design 08,
+      # Decision 3); the shipped defaults are 10 logins/min and 100 API calls/10 s, which these values lift for compose only.
+      RateLimiting__Login__PermitLimit: "1000"
+      RateLimiting__Login__WindowSeconds: "60"
+      RateLimiting__Api__TokenLimit: "10000"
+      RateLimiting__Api__TokensPerPeriod: "10000"
+      RateLimiting__Api__ReplenishmentSeconds: "10"
       # Service Bus configuration (optional; only set when messaging profile is active).
       # When empty, SLA breach notifications are logged but not published to Service Bus.
       # To enable: set SERVICEBUS_CONNECTION_STRING in .env or run with --profile messaging.
