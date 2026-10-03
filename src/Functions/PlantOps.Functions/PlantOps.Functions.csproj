@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Isolated worker model: the app is its own process (an Exe) and the Functions host talks to it over gRPC. -->
+    <OutputType>Exe</OutputType>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+    <RootNamespace>PlantOps.Functions</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" />
+    <!-- Build-time: generates the function metadata and the extension project. Needs only NuGet, no Core Tools. -->
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A second host of the modular monolith (ADR-0010): it composes the WorkOrders module like the Api does, and
+         reaches the Service Bus event through the module's public Contracts. -->
+    <ProjectReference Include="..\..\Modules\WorkOrders\PlantOps.Modules.WorkOrders\PlantOps.Modules.WorkOrders.csproj" />
+    <ProjectReference Include="..\..\Modules\WorkOrders\PlantOps.Modules.WorkOrders.Contracts\PlantOps.Modules.WorkOrders.Contracts.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\PlantOps.BuildingBlocks.Infrastructure\PlantOps.BuildingBlocks.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Not committed (.gitignore): holds local secrets. See local.settings.sample.json. -->
+    <None Update="local.settings.json" Condition="Exists('local.settings.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

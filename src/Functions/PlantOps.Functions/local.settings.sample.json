@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ConnectionStrings__PlantOps": "Server=localhost,1433;Database=PlantOps;User Id=sa;Password=<your password>;TrustServerCertificate=True",
+    "Factory__TimeZone": "Asia/Kuala_Lumpur",
+    "ServiceBus__fullyQualifiedNamespace": "<namespace>.servicebus.windows.net",
+    "ServiceBus__SlaBreachQueue": "sla-breaches",
+    "SlaBreachQueue": "sla-breaches",
+    "Notifications__TeamsWebhookUrl": ""
+  }
+}

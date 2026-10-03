@@ -23,6 +23,16 @@ dd {
   gap: 12px;
 }
 
+.escalated-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

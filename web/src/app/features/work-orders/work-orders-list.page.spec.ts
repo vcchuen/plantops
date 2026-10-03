@@ -20,6 +20,8 @@ const item = (over: Partial<WorkOrderListItem> = {}): WorkOrderListItem => ({
   dueAt: '2026-10-03T12:00:00Z',
   assignedTo: { id: 't1', name: 'Tom Tech' },
   submittedAt: '2026-10-03T08:00:00Z',
+  source: 'Reactive',
+  escalatedAt: null,
   ...over,
 });
 
@@ -86,6 +88,59 @@ describe('WorkOrdersListPage', () => {
     expect(badges[1]).toContain('Breached');
     expect(el.textContent).toContain('SMT-001 — Pick and place');
     expect(el.textContent).toContain('P1 · Critical (4h)');
+  });
+
+  it('sends escalated=true only when the param is "true"', () => {
+    create({ escalated: 'true' });
+    const req = listReq();
+    expect(req.request.params.get('escalated')).toBe('true');
+    req.flush(pageOf([]));
+  });
+
+  it('omits escalated for any other value', () => {
+    create({ escalated: 'false' });
+    const req = listReq();
+    expect(req.request.params.has('escalated')).toBe(false);
+    req.flush(pageOf([]));
+  });
+
+  it('toggling "Escalated only" sets the URL param and resets the page', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    create({ page: '3' });
+    listReq().flush(pageOf([item()], 100));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const boxes = el.querySelectorAll<HTMLInputElement>('mat-checkbox input');
+    boxes[1].click();
+
+    expect(navigate).toHaveBeenCalledWith([], {
+      queryParams: { escalated: 'true', page: 1 },
+      queryParamsHandling: 'merge',
+    });
+  });
+
+  it('shows a Preventive chip and an Escalated indicator only where they apply', async () => {
+    create();
+    listReq().flush(
+      pageOf([
+        item(),
+        item({
+          id: 'w2',
+          number: 'WO-000002',
+          source: 'Preventive',
+          escalatedAt: '2026-10-03T11:00:00Z',
+        }),
+      ]),
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const rows = el.querySelectorAll('tr[mat-row]');
+    expect(rows[0].querySelector('.chip')).toBeNull();
+    expect(rows[0].querySelector('.escalated')).toBeNull();
+    expect(rows[1].querySelector('.chip')?.textContent).toContain('Preventive');
+    expect(rows[1].querySelector('.escalated')?.textContent).toContain('Escalated');
   });
 
   it('links to the raise form', () => {

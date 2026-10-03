@@ -49,6 +49,10 @@ const detail = (over: Partial<WorkOrderDetail> = {}): WorkOrderDetail => ({
   rejectionReason: null,
   cancellationReason: null,
   allowedActions: ['start', 'cancel'],
+  source: 'Reactive',
+  escalatedAt: null,
+  pmScheduleId: null,
+  pmDueOn: null,
   ...over,
 });
 
@@ -137,6 +141,34 @@ describe('WorkOrderDetailPage', () => {
     expect(text).toContain('Machine down');
     expect(el.querySelector('app-sla-badge')?.textContent).toContain('On track');
     expect(el.querySelector('.countdown')?.textContent).toMatch(/due in|overdue by/);
+  });
+
+  it('shows the Reactive source with no PM link and no escalation banner', async () => {
+    create();
+    load();
+    await fixture.whenStable();
+    expect(el.querySelector('dl')?.textContent).toContain('Reactive');
+    expect(el.querySelector('a[href^="/pm-schedules"]')).toBeNull();
+    expect(el.querySelector('.escalated-banner')).toBeNull();
+  });
+
+  it('shows the PM due date and a link to the schedule for a preventive order', async () => {
+    create();
+    load(detail({ source: 'Preventive', pmScheduleId: 'pm1', pmDueOn: '2026-10-20' }));
+    await fixture.whenStable();
+    const text = el.querySelector('dl')?.textContent ?? '';
+    expect(text).toContain('Preventive');
+    expect(text).toContain('Oct 20, 2026');
+    expect(el.querySelector('a[href="/pm-schedules/pm1"]')).not.toBeNull();
+  });
+
+  it('shows an Escalated banner as a status region when escalatedAt is set', async () => {
+    create();
+    load(detail({ escalatedAt: '2026-10-03T15:00:00Z' }));
+    await fixture.whenStable();
+    const banner = el.querySelector('.escalated-banner');
+    expect(banner?.getAttribute('role')).toBe('status');
+    expect(banner?.textContent).toContain('Escalated at');
   });
 
   it('renders history entries', async () => {

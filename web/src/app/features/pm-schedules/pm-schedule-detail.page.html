@@ -1,0 +1,74 @@
+<p><a routerLink="/pm-schedules">&larr; Back to PM schedules</a></p>
+
+@if (detail.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading PM schedule" />
+}
+
+<p class="visually-hidden" role="status">{{ busy() ? 'Updating schedule…' : notice() }}</p>
+
+@if (notFound()) {
+  <h1>PM schedule not found</h1>
+  <p>No PM schedule with that id exists. <a routerLink="/pm-schedules">Return to the list</a>.</p>
+} @else if (errorMessage(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else if (detail.hasValue()) {
+  @let s = detail.value();
+  <h1>{{ s.title }}</h1>
+
+  <p class="status">
+    <mat-icon aria-hidden="true">{{ status(s.isActive).icon }}</mat-icon>
+    {{ status(s.isActive).text }}
+  </p>
+
+  @if (actionError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  }
+
+  @if (session.isSupervisorOrAdmin()) {
+    <div class="actions" role="group" aria-label="PM schedule actions">
+      <a mat-flat-button [routerLink]="['/pm-schedules', s.id, 'edit']">Edit</a>
+      @if (s.isActive) {
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="busy() || detail.isLoading()"
+          (click)="setActive(false)"
+        >
+          Deactivate
+        </button>
+      } @else {
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="busy() || detail.isLoading()"
+          (click)="setActive(true)"
+        >
+          Activate
+        </button>
+      }
+    </div>
+  }
+
+  <dl>
+    <dt>Asset</dt>
+    <dd>
+      <a [routerLink]="['/assets', s.assetId]">{{ s.assetTag }} — {{ s.assetName }}</a>
+    </dd>
+    <dt>Priority</dt>
+    <dd>{{ priorityLabels[s.priority] }}</dd>
+    <dt>Interval</dt>
+    <dd>Every {{ s.intervalDays }} days</dd>
+    <dt>Lead days</dt>
+    <dd>{{ s.leadDays }}</dd>
+    <dt>Next due</dt>
+    <dd>{{ s.nextDueOn | date: 'mediumDate' }}</dd>
+    <dt>Instructions</dt>
+    <dd class="multiline">{{ s.instructions || '—' }}</dd>
+  </dl>
+}

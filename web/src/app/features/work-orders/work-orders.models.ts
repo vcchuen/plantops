@@ -9,6 +9,7 @@ export type WorkOrderStatus =
   | 'Cancelled';
 export type Priority = 'P1' | 'P2' | 'P3' | 'P4';
 export type SlaState = 'OnTrack' | 'AtRisk' | 'Breached' | 'Met' | 'Missed';
+export type WorkOrderSource = 'Reactive' | 'Preventive';
 export type WorkOrderAction =
   'approve' | 'reject' | 'assign' | 'start' | 'complete' | 'close' | 'cancel';
 
@@ -31,6 +32,8 @@ export interface WorkOrderListItem {
   dueAt: string;
   assignedTo: PersonRef | null;
   submittedAt: string;
+  source: WorkOrderSource;
+  escalatedAt: string | null;
 }
 
 export interface WorkOrderPage {
@@ -66,6 +69,11 @@ export interface WorkOrderDetail {
   rejectionReason: string | null;
   cancellationReason: string | null;
   allowedActions: WorkOrderAction[];
+  source: WorkOrderSource;
+  escalatedAt: string | null;
+  pmScheduleId: string | null;
+  // Date-only 'YYYY-MM-DD'.
+  pmDueOn: string | null;
 }
 
 export interface NewWorkOrder {

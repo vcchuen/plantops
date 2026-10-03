@@ -17,6 +17,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { describeError } from '../assets/assets.models';
 import { SlaBadge } from './sla-badge';
 import {
@@ -46,6 +47,7 @@ const positiveInt = (fallback: number) => (value: unknown) => {
     MatProgressBarModule,
     MatSelectModule,
     MatTableModule,
+    MatTooltipModule,
   ],
   templateUrl: './work-orders-list.page.html',
   styleUrl: './work-orders-list.page.scss',
@@ -58,10 +60,12 @@ export class WorkOrdersListPage {
   readonly status = input<string | undefined>();
   readonly priority = input<string | undefined>();
   readonly mine = input<string | undefined>();
+  readonly escalated = input<string | undefined>();
   readonly page = input(1, { transform: positiveInt(1) });
   readonly pageSize = input(25, { transform: positiveInt(25) });
 
   protected readonly onlyMine = computed(() => this.mine() === 'true');
+  protected readonly onlyEscalated = computed(() => this.escalated() === 'true');
 
   protected readonly orders = httpResource<WorkOrderPage>(() => {
     const all: Record<string, string | number | undefined> = {
@@ -69,6 +73,7 @@ export class WorkOrdersListPage {
       priority: this.priority(),
       // Absent rather than mine=false: the server treats only "true" as a filter.
       mine: this.onlyMine() ? 'true' : undefined,
+      escalated: this.onlyEscalated() ? 'true' : undefined,
       page: this.page(),
       pageSize: this.pageSize(),
     };
@@ -120,6 +125,10 @@ export class WorkOrdersListPage {
 
   protected onMine(checked: boolean): void {
     this.navigate({ mine: checked ? 'true' : null });
+  }
+
+  protected onEscalated(checked: boolean): void {
+    this.navigate({ escalated: checked ? 'true' : null });
   }
 
   protected onPage(event: PageEvent): void {

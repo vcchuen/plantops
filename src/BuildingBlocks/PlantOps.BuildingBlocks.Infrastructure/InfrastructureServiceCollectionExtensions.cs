@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -16,6 +17,20 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddScoped<DomainEventInterceptor>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the <see cref="FactoryClock"/> with the zone from "Factory:TimeZone" (default Asia/Kuala_Lumpur).
+    /// Several modules call this; TryAdd keeps one instance. The configuration is read when the clock is first
+    /// resolved, not now, so host settings added after registration (and test overrides) still apply.
+    /// </summary>
+    public static IServiceCollection AddFactoryClock(this IServiceCollection services)
+    {
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton(sp => new FactoryClock(
+            sp.GetRequiredService<TimeProvider>(),
+            FactoryClock.FindZone(sp.GetRequiredService<IConfiguration>()[FactoryClock.ConfigurationKey])));
         return services;
     }
 

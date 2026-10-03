@@ -45,7 +45,11 @@ public class AssetsApiTests(SqlServerFixture fixture)
         return (await ReadJson(response)).GetProperty("id").GetGuid();
     }
 
-    private static string Today() => DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
+    // The factory's calendar date (Asia/Kuala_Lumpur, the Factory:TimeZone default): the server judges "today" there,
+    // and after 16:00 UTC it is already tomorrow in Penang.
+    private static string Today() =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Asia/Kuala_Lumpur")).DateTime)
+            .ToString("yyyy-MM-dd");
 
     // Returns the parsed body: TestServer response streams can be read only once.
     private static async Task<JsonElement> AssertProblem(HttpResponseMessage response, HttpStatusCode status)

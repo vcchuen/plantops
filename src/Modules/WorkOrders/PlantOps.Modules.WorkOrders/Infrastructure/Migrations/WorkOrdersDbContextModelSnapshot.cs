@@ -106,6 +106,68 @@ namespace PlantOps.Modules.WorkOrders.Infrastructure.Migrations
                     b.ToTable("OutboxMessages", "workorders");
                 });
 
+            modelBuilder.Entity("PlantOps.Modules.WorkOrders.Domain.PmSchedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AssetName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("AssetTag")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("IntervalDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LeadDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("NextDueOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetId")
+                        .HasDatabaseName("IX_PmSchedules_AssetId");
+
+                    b.HasIndex("IsActive", "NextDueOn")
+                        .HasDatabaseName("IX_PmSchedules_IsActive_NextDueOn");
+
+                    b.ToTable("PmSchedules", "workorders");
+                });
+
             modelBuilder.Entity("PlantOps.Modules.WorkOrders.Domain.WorkOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -164,10 +226,19 @@ namespace PlantOps.Modules.WorkOrders.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("DueAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset?>("EscalatedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<int>("Number")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValueSql("NEXT VALUE FOR [workorders].[WorkOrderNumbers]");
+
+                    b.Property<DateOnly?>("PmDueOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("PmScheduleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Priority")
                         .IsRequired()
@@ -198,6 +269,13 @@ namespace PlantOps.Modules.WorkOrders.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Reactive");
+
                     b.Property<DateTimeOffset?>("StartedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -222,12 +300,21 @@ namespace PlantOps.Modules.WorkOrders.Infrastructure.Migrations
                     b.HasIndex("AssignedToId")
                         .HasDatabaseName("IX_WorkOrders_AssignedToId");
 
+                    b.HasIndex("DueAt")
+                        .HasDatabaseName("IX_WorkOrders_DueAt_NotEscalated")
+                        .HasFilter("[EscalatedAt] IS NULL");
+
                     b.HasIndex("Number")
                         .IsUnique()
                         .HasDatabaseName("UX_WorkOrders_Number");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_WorkOrders_Status");
+
+                    b.HasIndex("PmScheduleId", "PmDueOn")
+                        .IsUnique()
+                        .HasDatabaseName("UX_WorkOrders_PmSchedule_DueOn")
+                        .HasFilter("[PmScheduleId] IS NOT NULL");
 
                     b.ToTable("WorkOrders", "workorders");
                 });

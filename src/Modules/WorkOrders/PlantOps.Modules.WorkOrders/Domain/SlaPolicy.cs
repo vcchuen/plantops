@@ -19,10 +19,15 @@ internal readonly record struct SlaPolicy(TimeSpan Target)
     public DateTimeOffset DueAt(DateTimeOffset submittedAt) => submittedAt + Target;
 
     /// <param name="completedAt">When the technician finished; null while the work is still open.</param>
-    public SlaState Evaluate(DateTimeOffset submittedAt, DateTimeOffset? completedAt, DateTimeOffset now)
-    {
-        var dueAt = DueAt(submittedAt);
+    public SlaState Evaluate(DateTimeOffset submittedAt, DateTimeOffset? completedAt, DateTimeOffset now) =>
+        EvaluateAgainst(DueAt(submittedAt), completedAt, now);
 
+    /// <summary>
+    /// Same rules against an explicit deadline. The "at risk" window is still a quarter of this priority's target
+    /// (so for a preventive order, the last quarter of the priority's target before the due date's end).
+    /// </summary>
+    public SlaState EvaluateAgainst(DateTimeOffset dueAt, DateTimeOffset? completedAt, DateTimeOffset now)
+    {
         if (completedAt is { } done)
         {
             // Finishing exactly at the deadline still meets it.

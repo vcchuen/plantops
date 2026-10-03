@@ -32,6 +32,10 @@
   <mat-checkbox [checked]="onlyMine()" (change)="onMine($event.checked)">
     Assigned to me
   </mat-checkbox>
+
+  <mat-checkbox [checked]="onlyEscalated()" (change)="onEscalated($event.checked)">
+    Escalated only
+  </mat-checkbox>
 </form>
 
 @if (orders.isLoading()) {
@@ -56,7 +60,18 @@
       </ng-container>
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef>Title</th>
-        <td mat-cell *matCellDef="let w">{{ w.title }}</td>
+        <td mat-cell *matCellDef="let w">
+          {{ w.title }}
+          @if (w.source === 'Preventive') {
+            <span class="chip">Preventive</span>
+          }
+          @if (w.escalatedAt) {
+            <span class="escalated" [matTooltip]="'Escalated at ' + (w.escalatedAt | date: 'short')">
+              <mat-icon aria-hidden="true">priority_high</mat-icon>
+              Escalated
+            </span>
+          }
+        </td>
       </ng-container>
       <ng-container matColumnDef="asset">
         <th mat-header-cell *matHeaderCellDef>Asset</th>

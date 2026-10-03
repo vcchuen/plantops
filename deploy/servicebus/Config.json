@@ -1,0 +1,21 @@
+{
+  "UserConfig": {
+    "Namespaces": [
+      {
+        "Name": "sbemulatorns",
+        "Queues": [
+          {
+            "Name": "sla-breaches",
+            "Properties": {
+              "RequiresDuplicateDetection": true,
+              "DuplicateDetectionHistoryTimeWindow": "PT10M",
+              "MaxDeliveryCount": 5,
+              "DeadLetteringOnMessageExpiration": true,
+              "LockDuration": "PT1M"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

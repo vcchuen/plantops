@@ -224,13 +224,13 @@ internal static class AssetEndpoints
         Guid id,
         DecommissionRequest request,
         AssetsDbContext db,
-        TimeProvider time,
+        FactoryClock factory,
         CancellationToken ct)
     {
         var asset = await LoadAsset(db, id, ct);
-        // UTC date for now; which calendar day "today" means for a Penang factory is a later policy decision.
-        var today = DateOnly.FromDateTime(time.GetUtcNow().UtcDateTime);
-        asset.Decommission(request.On, request.Reason, today);
+        // "Today" is the factory's calendar date (M6 settled the question M2 left open): at 07:30 in Penang a UTC
+        // date would still say yesterday and reject a decommission dated today.
+        asset.Decommission(request.On, request.Reason, factory.Today);
         await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }

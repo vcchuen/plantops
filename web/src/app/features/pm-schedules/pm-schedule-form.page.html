@@ -1,0 +1,129 @@
+<p>
+  <a [routerLink]="isEdit() ? ['/pm-schedules', id()] : ['/pm-schedules']"
+    >&larr; Back to {{ isEdit() ? 'schedule' : 'PM schedules' }}</a
+  >
+</p>
+<h1>{{ isEdit() ? 'Edit PM schedule' : 'New PM schedule' }}</h1>
+
+@if (detail.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading PM schedule" />
+}
+
+<p class="visually-hidden" role="status">{{ scheduleForm().submitting() ? 'Saving…' : '' }}</p>
+
+@if (notFound()) {
+  <p>No PM schedule with that id exists. <a routerLink="/pm-schedules">Return to the list</a>.</p>
+} @else if (loadError(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else {
+  <form class="schedule" novalidate (submit)="onSubmit($event)">
+    <mat-form-field>
+      <mat-label>Asset</mat-label>
+      <input
+        matInput
+        type="text"
+        autocomplete="off"
+        [matAutocomplete]="assetAuto"
+        [errorStateMatcher]="assetErrorMatcher"
+        [disabled]="isEdit()"
+        [value]="assetText()"
+        (input)="onAssetInput($any($event.target).value)"
+        (focus)="onAssetFocus()"
+        (blur)="scheduleForm.assetId().markAsTouched()"
+      />
+      <mat-autocomplete
+        #assetAuto="matAutocomplete"
+        (optionSelected)="pickAsset($event.option.value)"
+      >
+        @for (asset of assetOptions(); track asset.id) {
+          <mat-option [value]="asset">{{ assetLabel(asset) }}</mat-option>
+        }
+      </mat-autocomplete>
+      <mat-hint>{{
+        isEdit() ? 'The asset cannot be changed' : 'Type a tag or name to search in-service assets'
+      }}</mat-hint>
+      @for (error of scheduleForm.assetId().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Title</mat-label>
+      <input matInput type="text" [formField]="scheduleForm.title" />
+      @for (error of scheduleForm.title().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Instructions</mat-label>
+      <textarea matInput rows="5" [formField]="scheduleForm.instructions"></textarea>
+      @for (error of scheduleForm.instructions().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Interval (days)</mat-label>
+      <input matInput type="number" step="1" [formField]="scheduleForm.intervalDays" />
+      <mat-hint>1 to 365</mat-hint>
+      @for (error of scheduleForm.intervalDays().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Lead days</mat-label>
+      <input matInput type="number" step="1" [formField]="scheduleForm.leadDays" />
+      <mat-hint>How many days before the due date the work order is raised (0 to 30)</mat-hint>
+      @for (error of scheduleForm.leadDays().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Priority</mat-label>
+      <mat-select [formField]="scheduleForm.priority">
+        @for (p of priorities; track p) {
+          <mat-option [value]="p">{{ priorityLabels[p] }}</mat-option>
+        }
+      </mat-select>
+      @for (error of scheduleForm.priority().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Next due on</mat-label>
+      <input matInput type="date" [formField]="scheduleForm.nextDueOn" />
+      @for (error of scheduleForm.nextDueOn().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (serverError(); as message) {
+      <p class="error" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        {{ message }}
+      </p>
+    }
+
+    <div class="actions">
+      <button
+        mat-flat-button
+        type="submit"
+        [disabled]="scheduleForm().invalid() || scheduleForm().submitting()"
+      >
+        {{
+          scheduleForm().submitting() ? 'Saving…' : isEdit() ? 'Save changes' : 'Create schedule'
+        }}
+      </button>
+      <a mat-button [routerLink]="isEdit() ? ['/pm-schedules', id()] : ['/pm-schedules']"
+        >Cancel</a
+      >
+    </div>
+  </form>
+}

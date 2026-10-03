@@ -78,7 +78,123 @@ internal sealed class WorkOrder : AggregateRoot
 
     public string? CancellationReason { get; private set; }
 
+    public WorkOrderSource Source { get; private set; }
+
+    /// <summary>
+    /// When the SLA breach was noticed and people were told (a stored fact, unlike the computed SLA state). Null until
+    /// then; once set it is never cleared, which is what makes escalation happen once.
+    /// </summary>
+    public DateTimeOffset? EscalatedAt { get; private set; }
+
+    /// <summary>The schedule that planned this work; null for reactive work. With <see cref="PmDueOn"/> it is unique.</summary>
+    public Guid? PmScheduleId { get; private set; }
+
+    /// <summary>The occurrence (factory calendar date) this work order covers.</summary>
+    public DateOnly? PmDueOn { get; private set; }
+
     public byte[] RowVersion { get; private set; } = [];
+
+    /// <summary>Open = someone still owes the repair. Completed work is done (awaiting only sign-off), so it cannot breach.</summary>
+    public static bool IsOpenStatus(WorkOrderStatus status) =>
+        status is WorkOrderStatus.Submitted or WorkOrderStatus.Approved or WorkOrderStatus.Assigned or WorkOrderStatus.InProgress;
+
+    /// <summary>Same set as <see cref="IsOpenStatus"/>, as an array so a list query can translate it to SQL IN.</summary>
+    public static readonly WorkOrderStatus[] OpenStatuses =
+        [WorkOrderStatus.Submitted, WorkOrderStatus.Approved, WorkOrderStatus.Assigned, WorkOrderStatus.InProgress];
+
+    /// <summary>
+    /// A planned job raised by a PM schedule. It starts Approved (a planned job needs no approval), is reported and
+    /// approved by the system actor, and its deadline is the due date itself rather than a priority target.
+    /// </summary>
+    public static WorkOrder RaisePreventive(
+        Guid assetId,
+        string assetTag,
+        string assetName,
+        string title,
+        string? instructions,
+        WorkOrderPriority priority,
+        Guid pmScheduleId,
+        DateOnly dueOn,
+        Actor system,
+        DateTimeOffset now,
+        DateTimeOffset dueAt)
+    {
+        ArgumentNullException.ThrowIfNull(system);
+        EnsureDefined(priority);
+
+        var workOrder = new WorkOrder
+        {
+            Id = WorkOrderId.New(),
+            AssetId = assetId,
+            AssetTag = TextRules.Required(assetTag, "Asset tag", AssetTagMaxLength),
+            AssetName = TextRules.Required(assetName, "Asset name", AssetNameMaxLength),
+            Title = TextRules.Required(title, "Title", TitleMaxLength),
+            Description = TextRules.Optional(instructions, "Description", DescriptionMaxLength),
+            Priority = priority,
+            AssetDown = false,
+            Status = WorkOrderStatus.Approved,
+            ReportedById = system.Id,
+            ReportedByName = system.Name,
+            ApprovedById = system.Id,
+            ApprovedByName = system.Name,
+            SubmittedAt = now,
+            ApprovedAt = now,
+            DueAt = dueAt,
+            Source = WorkOrderSource.Preventive,
+            PmScheduleId = pmScheduleId,
+            PmDueOn = dueOn,
+        };
+
+        // The same two facts a reactive order records, so the history reads the same for both.
+        workOrder.Raise(new WorkOrderSubmitted(
+            workOrder.Id.Value,
+            assetId,
+            workOrder.AssetTag,
+            workOrder.Title,
+            priority,
+            AssetDown: false,
+            dueAt));
+        workOrder.Raise(new WorkOrderApproved(workOrder.Id.Value, priority, dueAt));
+        return workOrder;
+    }
+
+    /// <summary>True when escalation would act now: open, past its deadline (strictly), and not yet escalated.</summary>
+    public bool IsEscalatable(DateTimeOffset now) => EscalatedAt is null && IsOpenStatus(Status) && now > DueAt;
+
+    /// <summary>
+    /// Records that the SLA was breached and raises <see cref="WorkOrderSlaBreached"/>. Idempotent: an already
+    /// escalated order is left alone and false is returned, so a second run of the job changes nothing.
+    /// </summary>
+    /// <returns>True when this call escalated the order; false when it already was.</returns>
+    public bool Escalate(DateTimeOffset now)
+    {
+        if (EscalatedAt is not null)
+        {
+            return false;
+        }
+
+        if (!IsOpenStatus(Status))
+        {
+            throw new DomainException($"Cannot escalate a work order that is {Status}; it must be open.");
+        }
+
+        if (now <= DueAt)
+        {
+            throw new DomainException("Cannot escalate a work order that is not past its deadline.");
+        }
+
+        EscalatedAt = now;
+        Raise(new WorkOrderSlaBreached(
+            Id.Value,
+            FormatNumber(Number),
+            Title,
+            AssetTag,
+            Priority,
+            DueAt,
+            now,
+            AssignedToName));
+        return true;
+    }
 
     /// <param name="now">Passed in so the aggregate never reads a clock.</param>
     public static WorkOrder Submit(
@@ -228,18 +344,22 @@ internal sealed class WorkOrder : AggregateRoot
     /// Null for rejected and cancelled orders: no repair was ever owed, so there is no deadline to meet.
     /// Computed, never stored, because the answer changes with the clock.
     /// </summary>
-    public SlaState? SlaStateAt(DateTimeOffset now) => ComputeSlaState(Status, Priority, SubmittedAt, CompletedAt, now);
+    public SlaState? SlaStateAt(DateTimeOffset now) => ComputeSlaState(Status, Priority, DueAt, CompletedAt, now);
 
-    /// <summary>Static so list queries can evaluate it on projected columns without loading aggregates.</summary>
+    /// <summary>
+    /// Static so list queries can evaluate it on projected columns without loading aggregates. Judged against the
+    /// stored <paramref name="dueAt"/> (not submittedAt + target) because a preventive order's deadline is its due
+    /// date; for reactive orders the two are identical (Submit and a re-triaging Approve both store target-based dueAt).
+    /// </summary>
     public static SlaState? ComputeSlaState(
         WorkOrderStatus status,
         WorkOrderPriority priority,
-        DateTimeOffset submittedAt,
+        DateTimeOffset dueAt,
         DateTimeOffset? completedAt,
         DateTimeOffset now) =>
         status is WorkOrderStatus.Rejected or WorkOrderStatus.Cancelled
             ? null
-            : SlaPolicy.For(priority).Evaluate(submittedAt, completedAt, now);
+            : SlaPolicy.For(priority).EvaluateAgainst(dueAt, completedAt, now);
 
     private void EnsureStatus(string action, params WorkOrderStatus[] allowed)
     {

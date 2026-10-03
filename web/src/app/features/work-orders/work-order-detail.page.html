@@ -25,6 +25,13 @@
     }
   </p>
 
+  @if (w.escalatedAt) {
+    <p class="escalated-banner" role="status">
+      <mat-icon aria-hidden="true">priority_high</mat-icon>
+      Escalated at {{ w.escalatedAt | date: 'medium' }}
+    </p>
+  }
+
   @if (actionError(); as message) {
     <p class="error" role="alert">
       <mat-icon aria-hidden="true">error</mat-icon>
@@ -50,6 +57,17 @@
   <dl>
     <dt>Status</dt>
     <dd>{{ statusLabels[w.status] }}</dd>
+    <dt>Source</dt>
+    <dd>{{ w.source }}</dd>
+    @if (w.source === 'Preventive') {
+      <dt>PM due</dt>
+      <dd>
+        {{ w.pmDueOn | date: 'mediumDate' }}
+        @if (w.pmScheduleId) {
+          · <a [routerLink]="['/pm-schedules', w.pmScheduleId]">View PM schedule</a>
+        }
+      </dd>
+    }
     <dt>Priority</dt>
     <dd>{{ priorityLabels[w.priority] }}</dd>
     <dt>Asset</dt>
