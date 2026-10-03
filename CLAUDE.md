@@ -40,6 +40,8 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - M6: FactoryClock (Asia/Kuala_Lumpur) is the business "today". Functions app at src/Functions/PlantOps.Functions (UTC cron; WEBSITE_TIME_ZONE is unsupported on Linux Consumption/Flex). Runners are behind contracts in WorkOrders.Contracts. Service Bus is optional (logging publisher when unconfigured); the queue `sla-breaches` needs duplicate detection. M9 Bicep must set both `ServiceBus__SlaBreachQueue` and `SlaBreachQueue`.
 - Angular DatePipe parses 'YYYY-MM-DD' as a LOCAL date. Never add ':UTC' to date-only values. CI runs Vitest in both America/Los_Angeles and Asia/Kuala_Lumpur.
 - Known gap: PM schedules aren't auto-deactivated when an asset is decommissioned (event-driven fix noted for "next").
+- M7: Reporting module (reporting.WorkOrderFacts) projected from WorkOrderCompletedIntegrationEvent; rebuild via POST /api/reports/rebuild. The perf harness (perf/PlantOps.Perf) runs in CI (perf.yml on PR paths perf/** or dispatch). Measured numbers live in docs/study/07 and cite run 37091237887. The covering index was adopted from that run; compiled query NOT adopted (within error bars).
+- Next is the review-me branch: 5-8 planted problems, never reveal their locations. Base it on m7-reporting.
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -53,7 +55,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 | 4 | Work order lifecycle | done (PR #4, stacked on m3-identity) |
 | 5 | Inventory + events between modules (outbox) | done (PR #5, stacked on m4-workorders) |
 | 6 | SLA escalation + preventive maintenance | done (PR #6, stacked on m5-inventory) |
-| 7 | Reporting (CQRS read side) + EF performance | — |
+| 7 | Reporting (CQRS read side) + EF performance | done (PR #7, stacked on m6-sla-pm) |
 | — | `review-me` branch | — |
 | 8 | Test pyramid + OWASP | — |
 | 9 | Azure (Bicep, Actions deploy) | — |
