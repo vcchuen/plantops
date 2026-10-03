@@ -70,8 +70,9 @@ public class HostTests
 
         var response = await client.GetAsync("/api/does-not-exist", TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        // Anonymous, so 401 (see IdentityHostTests for the signed-in 404); the point here is: never the SPA's HTML.
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.NotEqual("text/html", response.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]
