@@ -18,7 +18,9 @@ internal sealed record WorkOrderListItem(
     SlaState? SlaState,
     PersonRef? AssignedTo,
     DateTimeOffset SubmittedAt,
-    DateTimeOffset DueAt);
+    DateTimeOffset DueAt,
+    WorkOrderSource Source,
+    DateTimeOffset? EscalatedAt);
 
 internal sealed record WorkOrderDetail(
     Guid Id,
@@ -44,6 +46,10 @@ internal sealed record WorkOrderDetail(
     string? Resolution,
     string? RejectionReason,
     string? CancellationReason,
+    WorkOrderSource Source,
+    DateTimeOffset? EscalatedAt,
+    Guid? PmScheduleId,
+    DateOnly? PmDueOn,
     IReadOnlyList<string> AllowedActions);
 
 internal sealed record ListWorkOrdersQuery(
@@ -51,6 +57,7 @@ internal sealed record ListWorkOrdersQuery(
     WorkOrderPriority? Priority,
     Guid? AssetId,
     bool Mine = false,
+    bool Escalated = false,
     int Page = 1,
     int PageSize = 25);
 

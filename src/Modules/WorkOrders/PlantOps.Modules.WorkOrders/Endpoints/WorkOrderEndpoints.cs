@@ -118,6 +118,11 @@ internal static class WorkOrderEndpoints
             workOrders = me is null ? workOrders.Where(_ => false) : workOrders.Where(w => w.AssignedToId == me);
         }
 
+        if (query.Escalated)
+        {
+            workOrders = workOrders.Where(w => w.EscalatedAt != null);
+        }
+
         var totalCount = await workOrders.CountAsync(ct);
 
         // One query for the page: the snapshots (asset tag, people names) live on the row, so nothing is joined or
@@ -142,6 +147,8 @@ internal static class WorkOrderEndpoints
                 w.SubmittedAt,
                 w.CompletedAt,
                 w.DueAt,
+                w.Source,
+                w.EscalatedAt,
             })
             .ToListAsync(ct);
 
@@ -158,10 +165,12 @@ internal static class WorkOrderEndpoints
                 r.Title,
                 r.Priority,
                 r.Status,
-                WorkOrder.ComputeSlaState(r.Status, r.Priority, r.SubmittedAt, r.CompletedAt, now),
+                WorkOrder.ComputeSlaState(r.Status, r.Priority, r.DueAt, r.CompletedAt, now),
                 r.AssignedToId is null ? null : new PersonRef(r.AssignedToId, r.AssignedToName ?? r.AssignedToId),
                 r.SubmittedAt,
-                r.DueAt))
+                r.DueAt,
+                r.Source,
+                r.EscalatedAt))
             .ToList();
 
         return TypedResults.Ok(new PagedResponse<WorkOrderListItem>(items, page, pageSize, totalCount));
@@ -415,6 +424,10 @@ internal static class WorkOrderEndpoints
             w.Resolution,
             w.RejectionReason,
             w.CancellationReason,
+            w.Source,
+            w.EscalatedAt,
+            w.PmScheduleId,
+            w.PmDueOn,
             WorkOrderAccess.AllowedActions(w.Status, canSupervise, canWork));
     }
 }

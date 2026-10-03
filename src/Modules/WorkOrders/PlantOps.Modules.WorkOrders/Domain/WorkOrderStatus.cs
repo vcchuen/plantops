@@ -21,6 +21,13 @@ internal enum WorkOrderPriority
     P4,
 }
 
+/// <summary>Where the work came from: someone reported a fault, or a PM schedule planned it.</summary>
+internal enum WorkOrderSource
+{
+    Reactive,
+    Preventive,
+}
+
 internal enum SlaState
 {
     OnTrack,

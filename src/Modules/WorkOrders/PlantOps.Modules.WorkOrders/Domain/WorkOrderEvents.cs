@@ -38,6 +38,17 @@ internal sealed record WorkOrderCompleted(
     string TechnicianName,
     bool AssetDown) : IDomainEvent;
 
+// Carries everything its integration event needs (see the note above): the notifier must not call back into WorkOrders.
+internal sealed record WorkOrderSlaBreached(
+    Guid WorkOrderId,
+    string Number,
+    string Title,
+    string AssetTag,
+    WorkOrderPriority Priority,
+    DateTimeOffset DueAt,
+    DateTimeOffset EscalatedAt,
+    string? AssignedToName) : IDomainEvent;
+
 internal sealed record WorkOrderClosed(Guid WorkOrderId) : IDomainEvent;
 
 internal sealed record WorkOrderCancelled(Guid WorkOrderId, string Number, string Reason, DateTimeOffset CancelledAt) : IDomainEvent;
