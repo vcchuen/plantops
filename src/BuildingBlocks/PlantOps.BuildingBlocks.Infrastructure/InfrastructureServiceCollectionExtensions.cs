@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using PlantOps.SharedKernel;
 
 namespace PlantOps.BuildingBlocks.Infrastructure;
 
@@ -15,6 +16,36 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddScoped<DomainEventInterceptor>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the outbox dispatcher and processor for a producing module's context (ADR-0009). The poll interval
+    /// is "Outbox:PollInterval" (a TimeSpan, default 2 s).
+    /// </summary>
+    public static IServiceCollection AddOutbox<TContext>(this IServiceCollection services)
+        where TContext : DbContext
+    {
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<IntegrationEventRegistry>();
+        services.AddSingleton<IOutboxProcessor<TContext>, OutboxProcessor<TContext>>();
+        services.AddSingleton<IHostedService, OutboxDispatcher<TContext>>();
+        return services;
+    }
+
+    /// <summary>Adds an event type to the dispatcher's allow-list. Only registered types are ever deserialized.</summary>
+    public static IServiceCollection AddIntegrationEvent<TEvent>(this IServiceCollection services)
+        where TEvent : class, IIntegrationEvent
+    {
+        services.AddSingleton(IntegrationEventRegistration.For<TEvent>());
+        return services;
+    }
+
+    /// <summary>Registers a producing module's domain-to-integration event mapper for <see cref="DomainEventInterceptor"/>.</summary>
+    public static IServiceCollection AddIntegrationEventMapper<TMapper>(this IServiceCollection services)
+        where TMapper : class, IIntegrationEventMapper
+    {
+        services.AddSingleton<IIntegrationEventMapper, TMapper>();
         return services;
     }
 

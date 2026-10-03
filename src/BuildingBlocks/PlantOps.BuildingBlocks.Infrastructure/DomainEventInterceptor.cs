@@ -9,8 +9,13 @@ namespace PlantOps.BuildingBlocks.Infrastructure;
 /// <summary>
 /// Turns the domain events pending on tracked aggregates into <see cref="AuditEntry"/> rows just before
 /// SaveChanges. The rows join the same unit of work, so the change and its audit trail commit or roll back together.
+/// When the module registered an <see cref="IIntegrationEventMapper"/> for the context, the same pass also writes
+/// <see cref="OutboxMessage"/> rows (ADR-0009): audit, change and outbox are one atomic commit.
 /// </summary>
-public sealed class DomainEventInterceptor(ICurrentUser currentUser, TimeProvider time) : SaveChangesInterceptor
+public sealed class DomainEventInterceptor(
+    ICurrentUser currentUser,
+    TimeProvider time,
+    IEnumerable<IIntegrationEventMapper> mappers) : SaveChangesInterceptor
 {
     private const string SystemId = "system";
     private const string SystemName = "System";
@@ -58,6 +63,9 @@ public sealed class DomainEventInterceptor(ICurrentUser currentUser, TimeProvide
             ? SystemName
             : string.IsNullOrWhiteSpace(currentUser.Name) ? currentUser.Id : currentUser.Name;
 
+        // The interceptor instance is shared by every module's context; the mapper is chosen per context.
+        var mapper = mappers.FirstOrDefault(m => m.ContextType == context.GetType());
+
         var now = time.GetUtcNow();
         var sequence = 0;
         foreach (var aggregate in aggregates)
@@ -75,6 +83,15 @@ public sealed class DomainEventInterceptor(ICurrentUser currentUser, TimeProvide
                     actorId,
                     actorName,
                     now.AddTicks(sequence++)));
+
+                if (mapper?.Map(domainEvent) is { } integrationEvent)
+                {
+                    // Runtime type again, for the same reason; the dispatcher deserializes by the stored type name.
+                    context.Set<OutboxMessage>().Add(new OutboxMessage(
+                        IntegrationEventRegistration.NameOf(integrationEvent.GetType()),
+                        JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType(), IntegrationEventJson.Options),
+                        now.AddTicks(sequence++)));
+                }
             }
 
             aggregate.ClearDomainEvents();
