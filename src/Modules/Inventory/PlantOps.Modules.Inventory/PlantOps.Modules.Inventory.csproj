@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The host's demo seeder builds aggregates directly (design 08, Decision 2). -->
+    <InternalsVisibleTo Include="PlantOps.Api" />
     <InternalsVisibleTo Include="PlantOps.Api.Tests" />
     <InternalsVisibleTo Include="PlantOps.Modules.Inventory.Tests" />
   </ItemGroup>

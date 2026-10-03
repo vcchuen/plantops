@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -40,7 +41,15 @@ public static class IdentityModule
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
                 options.SlidingExpiration = true;
                 options.Events.OnRedirectToLogin = context => RespondOrRedirect(context, StatusCodes.Status401Unauthorized);
-                options.Events.OnRedirectToAccessDenied = context => RespondOrRedirect(context, StatusCodes.Status403Forbidden);
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    // Every 403 from a policy or Forbid() passes through here (security event 1003). Subject id only.
+                    SecurityEvents.AccessDenied(
+                        OidcOptionsSetup.SecurityLogger(context.HttpContext.RequestServices),
+                        context.Request.Path,
+                        context.HttpContext.User.FindFirstValue(Claims.Subject) ?? "anonymous");
+                    return RespondOrRedirect(context, StatusCodes.Status403Forbidden);
+                };
             })
             .AddOpenIdConnect();
 
@@ -72,10 +81,15 @@ public static class IdentityModule
     }
 
     /// <summary>CSRF guard, then authentication, then authorization. Call after static files, before mapping endpoints.</summary>
-    public static IApplicationBuilder UseIdentityModule(this IApplicationBuilder app)
+    /// <param name="afterAuthentication">
+    /// Optional step slotted between authentication and authorization. The host puts its rate limiter there: it needs
+    /// the signed-in user to partition by, and it must still see requests that authorization is about to refuse.
+    /// </param>
+    public static IApplicationBuilder UseIdentityModule(this IApplicationBuilder app, Action<IApplicationBuilder>? afterAuthentication = null)
     {
         app.UseMiddleware<CsrfGuardMiddleware>();
         app.UseAuthentication();
+        afterAuthentication?.Invoke(app);
         app.UseAuthorization();
         return app;
     }
