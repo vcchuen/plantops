@@ -44,6 +44,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - Next is the review-me branch: 5-8 planted problems, never reveal their locations. Base it on m7-reporting.
 - M8: E2E (web/e2e, Playwright + axe) runs only in CI via e2e.yml against `docker compose up --wait`; it has validated the Keycloak wiring. Demo seed via `Seed:Demo=true` (Host/Seeding). Security headers/CSP, rate limits (config RateLimiting:*; fixtures lift them), SecurityEvents 1001-1006. OWASP 2025 map: docs/security/owasp-top-10.md.
 - API contract drift has happened twice (M4, M8). Top "next" item: generate the TS client from OpenAPI.
+- M9: Bicep in deploy/azure (compiled by infra.yml); deploy.yml is manual-only (OIDC; secrets are only ids). Opt-in Azure code in Host/Hosting/AzureHosting.cs (KeyVault:Uri, DataProtection:BlobUri+KeyId, APPLICATIONINSIGHTS_CONNECTION_STRING). Cost: docs/azure-cost.md from the Retail Prices API; actual spend not measured.
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -60,7 +61,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 | 7 | Reporting (CQRS read side) + EF performance | done (PR #7, stacked on m6-sla-pm) |
 | — | `review-me` branch | open as PR #8 (do not merge); answer key in Claude memory, not in the repo |
 | 8 | Test pyramid + OWASP | done (PR #9, stacked on m7-reporting) |
-| 9 | Azure (Bicep, Actions deploy) | — |
+| 9 | Azure (Bicep, Actions deploy) | done, NOT deployed (PR #10, stacked on m8-quality) |
 | 10 | README / portfolio polish | — |
 
 ## Key decisions (details in docs/adr)

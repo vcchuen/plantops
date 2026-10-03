@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": { "value": "plantops" },
+    "appServiceSku": { "value": "B1" },
+    "sqlAdminObjectId": { "value": "00000000-0000-0000-0000-000000000000" },
+    "sqlAdminLogin": { "value": "plantops-deploy" },
+    "sqlAdminPrincipalType": { "value": "Application" },
+    "authAuthority": { "value": "https://login.microsoftonline.com/<tenant-id>/v2.0" },
+    "authClientId": { "value": "00000000-0000-0000-0000-000000000000" },
+    "factoryTimeZone": { "value": "Asia/Kuala_Lumpur" },
+    "alertEmail": { "value": "" }
+  }
+}

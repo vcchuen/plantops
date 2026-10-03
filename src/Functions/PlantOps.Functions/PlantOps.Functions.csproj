@@ -13,6 +13,9 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.ServiceBus" />
+    <!-- OpenTelemetry to Application Insights, the isolated-worker approach Microsoft documents (see Program.cs). -->
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.OpenTelemetry" />
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" />
   </ItemGroup>
 
   <ItemGroup>

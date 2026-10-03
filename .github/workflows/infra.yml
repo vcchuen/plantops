@@ -1,0 +1,37 @@
+name: infra
+
+# Validates the Bicep without touching Azure: no login, no subscription. It proves the templates compile and lint,
+# not that Azure will accept them (that needs a real deployment; see deploy/azure/README.md).
+on:
+  pull_request:
+    paths:
+      - "deploy/azure/**"
+      - ".github/workflows/infra.yml"
+      - ".github/workflows/deploy.yml"
+  push:
+    branches: [main]
+    paths:
+      - "deploy/azure/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bicep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The Azure CLI ships with the runner image; this only downloads the Bicep compiler it drives.
+      - run: az bicep install
+      - name: Parameters file is valid JSON
+        run: jq empty deploy/azure/main.parameters.json
+      - name: Compile (az bicep build)
+        run: az bicep build --file deploy/azure/main.bicep --outdir "$RUNNER_TEMP/arm"
+      # Lint warnings are printed; errors fail the job.
+      - name: Lint (az bicep lint)
+        run: az bicep lint --file deploy/azure/main.bicep
