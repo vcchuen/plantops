@@ -37,6 +37,9 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - Routing: there is no `/api/{**rest}` catch-all any more. The SPA fallback excludes `/api` by regex. Anonymous unknown `/api` paths return 401 (the fallback policy also covers "no endpoint"); signed-in users get a 404 problem. Integration test clients must always send a JSON body on POST commands.
 - Subagents keep using heredocs despite instructions. Check `git status` for unexpected files after each agent.
 - M5: transactional outbox (`OutboxMessages` per producing schema) plus inbox (`InboxMessages` per consuming schema) in BuildingBlocks.Infrastructure. Register events via `AddIntegrationEvent<T>` (allow-list). Integration tests drain with `IOutboxProcessor<TContext>.ProcessOnceAsync()` (the fixture sets `Outbox:PollInterval` to 1 h). The whole-app fixture lives in Inventory.Tests. Reserve uses `ConcurrencyRetry` (retry policy); WorkOrders uses 412 (refuse policy).
+- M6: FactoryClock (Asia/Kuala_Lumpur) is the business "today". Functions app at src/Functions/PlantOps.Functions (UTC cron; WEBSITE_TIME_ZONE is unsupported on Linux Consumption/Flex). Runners are behind contracts in WorkOrders.Contracts. Service Bus is optional (logging publisher when unconfigured); the queue `sla-breaches` needs duplicate detection. M9 Bicep must set both `ServiceBus__SlaBreachQueue` and `SlaBreachQueue`.
+- Angular DatePipe parses 'YYYY-MM-DD' as a LOCAL date. Never add ':UTC' to date-only values. CI runs Vitest in both America/Los_Angeles and Asia/Kuala_Lumpur.
+- Known gap: PM schedules aren't auto-deactivated when an asset is decommissioned (event-driven fix noted for "next").
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -49,7 +52,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 | 3 | Identity & authorisation (Keycloak/OIDC) | done (PR #3, stacked on m2-assets) |
 | 4 | Work order lifecycle | done (PR #4, stacked on m3-identity) |
 | 5 | Inventory + events between modules (outbox) | done (PR #5, stacked on m4-workorders) |
-| 6 | SLA escalation + preventive maintenance | — |
+| 6 | SLA escalation + preventive maintenance | done (PR #6, stacked on m5-inventory) |
 | 7 | Reporting (CQRS read side) + EF performance | — |
 | — | `review-me` branch | — |
 | 8 | Test pyramid + OWASP | — |
