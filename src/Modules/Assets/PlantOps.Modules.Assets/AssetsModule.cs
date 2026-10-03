@@ -34,6 +34,7 @@ public static class AssetsModule
             .AddInterceptors(sp.GetRequiredService<DomainEventInterceptor>()));
 
         services.TryAddSingleton(TimeProvider.System);
+        services.AddFactoryClock();
         services.AddScoped<IAssetDirectory, AssetDirectory>();
 
         // Consumer of WorkOrders' completion event (ADR-0009); resolved by the dispatcher in a new scope per message.
