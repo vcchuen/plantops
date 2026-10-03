@@ -68,6 +68,19 @@
         >
           Work orders
         </a>
+        @if (session.hasRole('technician')) {
+          <a
+            mat-list-item
+            routerLink="/work-orders/queue"
+            routerLinkActive
+            #queue="routerLinkActive"
+            ariaCurrentWhenActive="page"
+            [activated]="queue.isActive"
+            (click)="isHandset() && drawer.close()"
+          >
+            My queue
+          </a>
+        }
         <a
           mat-list-item
           routerLink="/inventory"

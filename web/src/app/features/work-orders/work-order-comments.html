@@ -1,0 +1,92 @@
+<section aria-labelledby="comments-heading">
+  <h2 id="comments-heading">Comments</h2>
+
+  <p class="visually-hidden" role="status" aria-live="polite">{{ announcement() }}</p>
+
+  @if (loadError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  } @else if (comments.hasValue()) {
+    @if (comments.value().length === 0) {
+      <p class="note">No comments yet</p>
+    } @else {
+      <ul class="comments" aria-label="Comments">
+        @for (c of comments.value(); track c.id) {
+          <li>
+            <div class="meta">
+              <strong>{{ c.author.name }}</strong>
+              <time [attr.datetime]="c.createdAt">{{ c.createdAt | date: 'medium' }}</time>
+              @if (c.editedAt) {
+                <span class="note">(edited)</span>
+              }
+            </div>
+            @if (editingId() === c.id) {
+              <form class="comment-form" novalidate (submit)="onSave($event, c)">
+                <mat-form-field>
+                  <mat-label>Edit comment {{ c.sequence }}</mat-label>
+                  <textarea matInput rows="4" [formField]="editForm.body"></textarea>
+                  @for (error of editForm.body().errors(); track error.kind) {
+                    <mat-error>{{ error.message }}</mat-error>
+                  }
+                </mat-form-field>
+                @if (editError(); as message) {
+                  <p class="error" role="alert">
+                    <mat-icon aria-hidden="true">error</mat-icon>
+                    {{ message }}
+                  </p>
+                }
+                <div class="form-actions">
+                  <button
+                    mat-flat-button
+                    type="submit"
+                    [disabled]="editForm().invalid() || editForm().submitting()"
+                  >
+                    Save
+                  </button>
+                  <button mat-button type="button" (click)="cancelEdit()">Cancel</button>
+                </div>
+              </form>
+            } @else {
+              <div class="comment-body" [innerHTML]="asHtml(c.body)"></div>
+              <button
+                mat-button
+                type="button"
+                [attr.aria-label]="'Edit comment ' + c.sequence"
+                (click)="startEdit(c)"
+              >
+                Edit
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  <form class="comment-form" novalidate (submit)="onAdd($event)">
+    <mat-form-field>
+      <mat-label>Add a comment</mat-label>
+      <textarea matInput rows="3" [formField]="addForm.body"></textarea>
+      @for (error of addForm.body().errors(); track error.kind) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+    @if (addError(); as message) {
+      <p class="error" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        {{ message }}
+      </p>
+    }
+    <div class="form-actions">
+      <button
+        mat-flat-button
+        type="submit"
+        [disabled]="addForm().invalid() || addForm().submitting()"
+      >
+        Add comment
+      </button>
+    </div>
+  </form>
+</section>

@@ -95,6 +95,8 @@ public static class WorkOrdersModule
     {
         var group = app.MapGroup("/api/work-orders").WithTags("WorkOrders");
         WorkOrderEndpoints.Map(group);
+        CommentEndpoints.Map(group);
+        QueueEndpoints.Map(group);
         PmScheduleEndpoints.Map(app.MapGroup("/api/pm-schedules").WithTags("PmSchedules"));
         return app;
     }

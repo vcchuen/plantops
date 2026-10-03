@@ -1,0 +1,28 @@
+<h1>My queue</h1>
+
+<div class="filters">
+  <mat-slide-toggle [checked]="onlyToday()" (change)="onToggle($event.checked)">
+    Due today
+  </mat-slide-toggle>
+</div>
+
+@if (queue.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading your queue" />
+}
+
+@if (errorMessage(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else if (current(); as items) {
+  @if (items.length === 0) {
+    <p class="empty">{{ onlyToday() ? 'Nothing due today' : 'Your queue is empty' }}</p>
+  } @else {
+    <div class="grid">
+      @for (item of items; track item.id) {
+        <app-queue-card [item]="item" (opened)="open($event)" />
+      }
+    </div>
+  }
+}

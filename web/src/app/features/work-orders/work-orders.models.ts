@@ -76,6 +76,28 @@ export interface WorkOrderDetail {
   pmDueOn: string | null;
 }
 
+export interface WorkOrderComment {
+  id: string;
+  sequence: number;
+  author: PersonRef;
+  body: string;
+  createdAt: string;
+  editedAt: string | null;
+}
+
+export interface QueueItem {
+  id: string;
+  number: string;
+  title: string;
+  assetTag: string;
+  priority: Priority;
+  status: WorkOrderStatus;
+  dueAt: string;
+  // null for Rejected and Cancelled: no clock runs.
+  slaState: SlaState | null;
+  partsReserved: number;
+}
+
 export interface NewWorkOrder {
   assetId: string;
   title: string;

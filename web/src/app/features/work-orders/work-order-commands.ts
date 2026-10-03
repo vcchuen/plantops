@@ -2,7 +2,12 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { isProblem } from '../assets/assets.models';
-import { NewWorkOrder, WorkOrderAction, WorkOrderDetail } from './work-orders.models';
+import {
+  NewWorkOrder,
+  WorkOrderAction,
+  WorkOrderComment,
+  WorkOrderDetail,
+} from './work-orders.models';
 
 @Injectable({ providedIn: 'root' })
 export class WorkOrderCommands {
@@ -34,6 +39,24 @@ export class WorkOrderCommands {
       }),
     );
     return response.headers.get('ETag');
+  }
+
+  addComment(workOrderId: string, body: string): Promise<WorkOrderComment> {
+    return firstValueFrom(
+      this.http.post<WorkOrderComment>(
+        `/api/work-orders/${encodeURIComponent(workOrderId)}/comments`,
+        { body },
+      ),
+    );
+  }
+
+  async editComment(workOrderId: string, commentId: string, body: string): Promise<void> {
+    await firstValueFrom(
+      this.http.put<void>(
+        `/api/work-orders/${encodeURIComponent(workOrderId)}/comments/${encodeURIComponent(commentId)}`,
+        { body },
+      ),
+    );
   }
 }
 

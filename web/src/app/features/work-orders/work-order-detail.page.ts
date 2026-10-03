@@ -32,6 +32,7 @@ import {
   WorkOrderActionDialog,
 } from './work-order-action.dialog';
 import { WorkOrderCommands, describeCommandError, isConflict } from './work-order-commands';
+import { WorkOrderComments } from './work-order-comments';
 import {
   ACTION_LABELS,
   ACTION_ORDER,
@@ -51,6 +52,7 @@ const NEEDS_INPUT = new Set<WorkOrderAction>(['approve', 'reject', 'assign', 'co
     RouterLink,
     HistoryTimeline,
     SlaBadge,
+    WorkOrderComments,
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,

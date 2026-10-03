@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PlantOps.BuildingBlocks.Infrastructure;
+using PlantOps.Modules.Inventory.Contracts;
 using PlantOps.Modules.Inventory.Endpoints;
 using PlantOps.Modules.Inventory.Handlers;
 using PlantOps.Modules.Inventory.Infrastructure;
@@ -30,6 +31,7 @@ public static class InventoryModule
             .AddInterceptors(sp.GetRequiredService<DomainEventInterceptor>()));
 
         services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<IReservationQueries, ReservationQueries>();
 
         // Consumers of WorkOrders' integration events (ADR-0009). Scoped: the dispatcher resolves them in a new scope per message.
         services.AddScoped<IIntegrationEventHandler<WorkOrderCompletedIntegrationEvent>, WorkOrderCompletedHandler>();
