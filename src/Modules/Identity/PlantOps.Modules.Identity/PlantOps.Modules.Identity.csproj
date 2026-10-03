@@ -6,14 +6,19 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\PlantOps.BuildingBlocks.Infrastructure\PlantOps.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\PlantOps.SharedKernel\PlantOps.SharedKernel.csproj" />
     <ProjectReference Include="..\PlantOps.Modules.Identity.Contracts\PlantOps.Modules.Identity.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="PlantOps.Api.Tests" />
+    <InternalsVisibleTo Include="PlantOps.Modules.WorkOrders.Tests" />
   </ItemGroup>
 
 </Project>

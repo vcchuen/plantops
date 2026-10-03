@@ -80,4 +80,38 @@ public class ArchitectureTests
                 "one; public contracts belong in the '.Contracts' project (ADR-0002).");
         }
     }
+
+    [Fact]
+    public void Building_blocks_do_not_reference_any_module()
+    {
+        // Building blocks are shared by every module; one that pointed back at a module would make that module
+        // special and create a dependency cycle. They are not modules themselves, so the exported-types rule above
+        // does not apply to them.
+        foreach (var assembly in new[] { typeof(SharedKernel.DomainException).Assembly, typeof(BuildingBlocks.Infrastructure.ICurrentUser).Assembly })
+        {
+            var illegal = assembly.GetReferencedAssemblies()
+                .Where(r => r.Name is { } n && n.StartsWith(Prefix, StringComparison.Ordinal))
+                .Select(r => r.Name)
+                .ToList();
+
+            Assert.True(
+                illegal.Count == 0,
+                $"{assembly.GetName().Name} references {string.Join(", ", illegal)}. Building blocks must stay " +
+                "module-agnostic: put the abstraction (e.g. ICurrentUser) in the building block and let the module implement it.");
+        }
+    }
+
+    [Fact]
+    public void SharedKernel_stays_free_of_EF_Core_and_ASP_NET()
+    {
+        var illegal = typeof(SharedKernel.DomainException).Assembly.GetReferencedAssemblies()
+            .Where(r => r.Name is { } n && (n.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal) || n.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal)))
+            .Select(r => r.Name)
+            .ToList();
+
+        Assert.True(
+            illegal.Count == 0,
+            $"SharedKernel references {string.Join(", ", illegal)}. The domain model must stay persistence- and web-free; " +
+            "EF-aware code belongs in PlantOps.BuildingBlocks.Infrastructure.");
+    }
 }

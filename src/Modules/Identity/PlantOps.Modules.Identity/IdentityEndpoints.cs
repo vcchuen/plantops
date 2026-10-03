@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using PlantOps.Modules.Identity.Contracts;
+using PlantOps.SharedKernel;
 
 namespace PlantOps.Modules.Identity;
 
@@ -22,6 +24,7 @@ internal static class IdentityEndpoints
         group.MapGet("/me", Me).AllowAnonymous();
         // POST: a GET logout could be triggered by any <img src> on another site.
         group.MapPost("/logout", Logout);
+        group.MapGet("/users", ListUsers).RequireAuthorization(Policies.SuperviseWorkOrders).ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static IResult Login(string? returnUrl, HttpContext context, IOptions<AuthOptions> auth)
@@ -71,6 +74,18 @@ internal static class IdentityEndpoints
             user.FindFirstValue(Claims.Name) ?? user.Identity.Name,
             user.FindFirstValue(Claims.Email),
             roles));
+    }
+
+    private static async Task<IResult> ListUsers(string? role, IUserDirectory users, CancellationToken ct)
+    {
+        // Required: this feeds the "assign to" picker, and listing every person to a supervisor is not its job.
+        if (string.IsNullOrWhiteSpace(role) || role.Contains(','))
+        {
+            throw new DomainException("Query parameter 'role' is required, e.g. ?role=technician.");
+        }
+
+        var found = await users.ListByRoleAsync(role.Trim().ToLowerInvariant(), ct);
+        return Results.Ok(found.Select(u => new UserResponse(u.Id, u.Name, u.Email, u.Roles)).ToArray());
     }
 
     private static async Task<IResult> Logout(
@@ -137,5 +152,7 @@ internal static class IdentityEndpoints
 }
 
 internal sealed record MeResponse(string? Name, string? Email, string[] Roles);
+
+internal sealed record UserResponse(string Id, string Name, string? Email, IReadOnlyList<string> Roles);
 
 internal sealed record LogoutResponse(string LogoutUrl);
