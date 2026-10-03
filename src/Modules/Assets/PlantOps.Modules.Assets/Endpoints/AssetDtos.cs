@@ -33,6 +33,15 @@ internal sealed record AssetDetail(
     DateOnly? DecommissionedOn,
     string? DecommissionReason);
 
+internal sealed record MaintenanceItem(
+    Guid WorkOrderId,
+    string Number,
+    string Title,
+    string Resolution,
+    string TechnicianName,
+    DateTimeOffset CompletedAt,
+    int? DowntimeMinutes);
+
 internal sealed record ListAssetsQuery(
     Guid? LineId,
     Criticality? Criticality,
