@@ -1,0 +1,63 @@
+<div class="heading">
+  <h1>Reports</h1>
+  @if (exportHref(); as href) {
+    <a class="export" [href]="href" download="plantops-report.xlsx">Export to Excel</a>
+  } @else {
+    <a class="export disabled" role="link" aria-disabled="true">Export to Excel</a>
+  }
+</div>
+
+<form class="range" role="search" aria-label="Report date range" (submit)="$event.preventDefault()">
+  <mat-form-field>
+    <mat-label>From</mat-label>
+    <input
+      matInput
+      type="date"
+      [value]="fromDate()"
+      (change)="setParam('from', $any($event.target).value)"
+    />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>To</mat-label>
+    <input
+      matInput
+      type="date"
+      [value]="toDate()"
+      (change)="setParam('to', $any($event.target).value)"
+    />
+  </mat-form-field>
+</form>
+
+@if (problem(); as hint) {
+  <p class="hint" role="alert">{{ hint }}</p>
+}
+
+<div class="cards">
+  <app-report-card
+    kind="mttr"
+    title="Mean time to repair"
+    [from]="fromDate()"
+    [to]="toDate()"
+    [groupBy]="mttrGroup()"
+    [valid]="valid()"
+    (groupByChange)="setGroup('mttr', $event)"
+  />
+  <app-report-card
+    kind="sla"
+    title="SLA compliance"
+    [from]="fromDate()"
+    [to]="toDate()"
+    [groupBy]="slaGroup()"
+    [valid]="valid()"
+    (groupByChange)="setGroup('sla', $event)"
+  />
+  <app-report-card
+    kind="downtime"
+    title="Downtime"
+    [from]="fromDate()"
+    [to]="toDate()"
+    [groupBy]="downGroup()"
+    [valid]="valid()"
+    (groupByChange)="setGroup('downtime', $event)"
+  />
+</div>
