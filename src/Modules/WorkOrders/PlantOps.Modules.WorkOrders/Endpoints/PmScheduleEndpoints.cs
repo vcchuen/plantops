@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using PlantOps.BuildingBlocks.Infrastructure;
 using PlantOps.Modules.Assets.Contracts;
 using PlantOps.Modules.Identity.Contracts;
 using PlantOps.Modules.WorkOrders.Domain;
@@ -25,11 +26,22 @@ internal static class PmScheduleEndpoints
 
         group.MapGet("", List);
         group.MapGet("/{id:guid}", Get).ProducesProblem(StatusCodes.Status404NotFound);
+        group.MapGet("/{id:guid}/history", History).ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("", Create).RequireAuthorization(Policies.SuperviseWorkOrders);
         group.MapPut("/{id:guid}", Update).WithCommandProblems().RequireAuthorization(Policies.SuperviseWorkOrders);
         group.MapPost("/{id:guid}/deactivate", Deactivate).WithCommandProblems().RequireAuthorization(Policies.SuperviseWorkOrders);
         group.MapPost("/{id:guid}/activate", Activate).WithCommandProblems().RequireAuthorization(Policies.SuperviseWorkOrders);
+    }
+
+    private static async Task<Ok<IReadOnlyList<AuditHistoryItem>>> History(Guid id, WorkOrdersDbContext db, CancellationToken ct)
+    {
+        if (!await db.PmSchedules.AnyAsync(s => s.Id == new PmScheduleId(id), ct))
+        {
+            throw NotFound(id);
+        }
+
+        return TypedResults.Ok(await db.ForAggregateAsync(id.ToString(), ct));
     }
 
     private static RouteHandlerBuilder WithCommandProblems(this RouteHandlerBuilder builder) => builder
