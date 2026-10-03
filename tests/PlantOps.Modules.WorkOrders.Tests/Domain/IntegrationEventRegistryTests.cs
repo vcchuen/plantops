@@ -19,9 +19,12 @@ public class IntegrationEventRegistryTests
     }
 
     [Fact]
-    public void The_work_orders_module_registers_exactly_its_two_public_events()
+    public void The_work_orders_module_registers_exactly_its_three_public_events()
     {
         var registry = RegistryFromModule();
+
+        Assert.True(registry.TryGet(typeof(WorkOrderSlaBreachedIntegrationEvent).FullName, out var breached));
+        Assert.Equal(typeof(WorkOrderSlaBreachedIntegrationEvent), breached.EventType);
 
         Assert.True(registry.TryGet(CompletedName, out var completed));
         Assert.Equal(typeof(WorkOrderCompletedIntegrationEvent), completed.EventType);

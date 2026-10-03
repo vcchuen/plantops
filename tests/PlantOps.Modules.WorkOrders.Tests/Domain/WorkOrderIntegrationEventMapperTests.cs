@@ -59,6 +59,35 @@ public class WorkOrderIntegrationEventMapperTests
     }
 
     [Fact]
+    public void Escalating_maps_to_a_self_contained_breach_event()
+    {
+        var w = WorkOrderBuilder.InStatus(WorkOrderStatus.Assigned, WorkOrderPriority.P1);
+        var now = WorkOrderBuilder.T0.AddHours(5);
+
+        w.Escalate(now);
+
+        var mapped = Assert.IsType<WorkOrderSlaBreachedIntegrationEvent>(Mapper.Map(Assert.Single(w.DomainEvents)));
+        Assert.Equal(w.Id.Value, mapped.WorkOrderId);
+        Assert.Equal(WorkOrder.FormatNumber(w.Number), mapped.Number);
+        Assert.Equal("Feeder jam", mapped.Title);
+        Assert.Equal("SMT1-PNP-01", mapped.AssetTag);
+        Assert.Equal("P1", mapped.Priority);
+        Assert.Equal(WorkOrderBuilder.T0.AddHours(4), mapped.DueAt);
+        Assert.Equal(now, mapped.EscalatedAt);
+        Assert.Equal("Tom", mapped.AssignedToName);
+    }
+
+    [Fact]
+    public void Generating_a_preventive_work_order_stays_audit_only()
+    {
+        var w = WorkOrder.RaisePreventive(
+            Guid.NewGuid(), "RF-02", "Reflow oven", "Clean oven", null, WorkOrderPriority.P3,
+            Guid.NewGuid(), new DateOnly(2026, 10, 10), SystemActor.Instance, WorkOrderBuilder.T0, WorkOrderBuilder.T0.AddDays(7));
+
+        Assert.All(w.DomainEvents, e => Assert.Null(Mapper.Map(e)));
+    }
+
+    [Fact]
     public void Every_other_domain_event_stays_audit_only()
     {
         var w = WorkOrderBuilder.Submitted();
