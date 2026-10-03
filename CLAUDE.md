@@ -8,7 +8,7 @@ The user studies the code to defend it in senior .NET + Angular interviews. **Th
 2. Work on a branch per milestone (`mN-name`) in small conventional commits. Open a PR with a PR-style summary.
 3. After each milestone, write `docs/study/NN-name.md` with: first-principles concepts, a guided code tour in reading order, "why this, not that", pitfalls, 5 interview Q&As in `<details>`, and one "break it" lab.
 4. Comment only non-obvious code, and say WHY.
-5. **STOP after each milestone** and wait for the user to say "next".
+5. ~~STOP after each milestone~~ **Changed by the user on 2026-10-03: continue automatically to the next milestone. Stop only if the token budget runs low.** Skip DB/server/Azure deployment steps; write the code and config, and validate via CI.
 6. Never invent numbers (performance, cost). Measure them or leave them out.
 7. The `review-me` branch with planted bugs comes after M7. Never reveal the bug locations.
 
