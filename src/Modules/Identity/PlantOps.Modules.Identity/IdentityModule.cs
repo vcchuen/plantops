@@ -48,7 +48,8 @@ public static class IdentityModule
             // Secure by default: an endpoint nobody annotated still requires a signed-in user.
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
             .AddPolicy(Policies.ManageAssets, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin))
-            .AddPolicy(Policies.SuperviseWorkOrders, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin));
+            .AddPolicy(Policies.SuperviseWorkOrders, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin))
+            .AddPolicy(Policies.ManageInventory, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin));
 
         services.AddDbContext<IdentityDbContext>(options => options.UseSqlServer(
             configuration.GetConnectionString("PlantOps"),
