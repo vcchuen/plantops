@@ -89,7 +89,9 @@ internal static class InventoryEndpoints
     private static async Task<Ok<PartDetail>> GetPart(Guid id, InventoryDbContext db, CancellationToken ct) =>
         TypedResults.Ok(await QueryDetail(db, new SparePartId(id), ct) ?? throw PartNotFound(id));
 
-    private static async Task<Ok<PagedResponse<ReservationItem>>> ListReservations(
+    // A plain array, as the API contract (design 05) says: the SPA reads it as ReservationItem[]. It once returned a
+    // paged envelope; backend and frontend tests each passed against their own assumption and only E2E caught it.
+    private static async Task<Ok<List<ReservationItem>>> ListReservations(
         [AsParameters] ListReservationsQuery query,
         InventoryDbContext db,
         CancellationToken ct)
@@ -116,7 +118,7 @@ internal static class InventoryEndpoints
             .Take(MaxReservationRows)
             .ToListAsync(ct);
 
-        return TypedResults.Ok(new PagedResponse<ReservationItem>(items, 1, MaxReservationRows, items.Count));
+        return TypedResults.Ok(items);
     }
 
     // ---- stock commands (managers) ----
