@@ -22,8 +22,9 @@ appsettings.*.local.json
 # Azure Functions local settings (secrets); the committed template is local.settings.sample.json
 local.settings.json
 
-# Claude Code local settings
+# Claude Code local settings and tool caches
 .claude/settings.local.json
+.serena/
 
 # OS / IDE
 .DS_Store

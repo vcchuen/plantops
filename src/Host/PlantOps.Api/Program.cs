@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using PlantOps.Api.Health;
+using PlantOps.Api.Hosting;
 using PlantOps.Api.Http;
 using PlantOps.Api.Security;
 using PlantOps.Api.Seeding;
@@ -12,6 +13,9 @@ using PlantOps.Modules.Reporting;
 using PlantOps.Modules.WorkOrders;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// First: Key Vault secrets must be in configuration before the modules read their connection strings below.
+builder.AddAzureHosting();
 
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
