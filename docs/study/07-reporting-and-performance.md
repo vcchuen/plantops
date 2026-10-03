@@ -88,6 +88,11 @@ That's **4.3× faster and 51× fewer round trips**, on a container on the *same 
 - The 7 % allocation saving is real but irrelevant at this traffic. The regular LINQ stays, because it's simpler to read and change.
 - *This is the right answer in an interview:* "We measured, and it wasn't worth the complexity."
 
+### 2.5 Did it reproduce? (second run, **37091441234**, after adopting the index)
+- **Logical reads: identical** (894 / 35 / 48 per query) and the same plan operators. Reads are deterministic for the same data and plan, which is why they drive the decision.
+- **N+1:** 118.0 vs 31.4 ms median (**3.8×**, against 4.3× in the first run), and the same 102:2 commands. The time ratio moved and the command ratio didn't. That's runner noise, in plain sight.
+- **Compiled query:** 669.2 ± 66.9 µs vs 614.4 ± 133.6 µs, overlapping again. The decision stands.
+
 ---
 
 ## 3. Guided code tour
