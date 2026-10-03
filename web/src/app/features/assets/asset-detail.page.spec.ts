@@ -42,8 +42,18 @@ describe('AssetDetailPage', () => {
 
   afterEach(() => http.verify());
 
+  const history = [
+    {
+      eventType: 'AssetRelocated',
+      actorName: 'Sam Supervisor',
+      occurredAt: '2026-05-01T08:00:00Z',
+      payload: { station: 'S2' },
+    },
+  ];
+
   it('renders the fields in a definition list', async () => {
     http.expectOne('/api/assets/a1').flush(asset);
+    http.expectOne('/api/assets/a1/history').flush(history);
     await fixture.whenStable();
 
     expect(el.querySelector('h1')?.textContent).toContain('SMT-001');
@@ -56,6 +66,17 @@ describe('AssetDetailPage', () => {
     expect(el.querySelector('.banner')).toBeNull();
   });
 
+  it('renders the history timeline', async () => {
+    http.expectOne('/api/assets/a1').flush(asset);
+    http.expectOne('/api/assets/a1/history').flush(history);
+    await fixture.whenStable();
+
+    const items = el.querySelectorAll('ol.timeline li');
+    expect(items.length).toBe(1);
+    expect(items[0].textContent).toContain('Relocated');
+    expect(items[0].textContent).toContain('Sam Supervisor');
+  });
+
   it('shows a banner with date and reason for a decommissioned asset', async () => {
     http.expectOne('/api/assets/a1').flush({
       ...asset,
@@ -63,6 +84,7 @@ describe('AssetDetailPage', () => {
       decommissionedOn: '2024-06-01',
       decommissionReason: 'Replaced by NXT IV',
     });
+    http.expectOne('/api/assets/a1/history').flush([]);
     await fixture.whenStable();
 
     const banner = el.querySelector('.banner')?.textContent ?? '';
@@ -75,6 +97,7 @@ describe('AssetDetailPage', () => {
     http
       .expectOne('/api/assets/a1')
       .flush({ title: 'Not Found', status: 404 }, { status: 404, statusText: 'Not Found' });
+    http.expectOne('/api/assets/a1/history').flush([]);
     await fixture.whenStable();
 
     expect(el.textContent).toContain('Asset not found');
@@ -84,6 +107,7 @@ describe('AssetDetailPage', () => {
 
   it('shows an alert for other errors', async () => {
     http.expectOne('/api/assets/a1').flush('boom', { status: 500, statusText: 'Server Error' });
+    http.expectOne('/api/assets/a1/history').flush([]);
     await fixture.whenStable();
 
     expect(el.querySelector('[role="alert"]')).not.toBeNull();

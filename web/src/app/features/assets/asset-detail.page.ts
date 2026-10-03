@@ -2,13 +2,15 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse, httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { HistoryEntry } from '../shared/history.models';
+import { HistoryTimeline } from '../shared/history-timeline';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AssetDetail, CRITICALITY_LABELS, STATUS_LABELS, describeError } from './assets.models';
 
 @Component({
   selector: 'app-asset-detail-page',
-  imports: [DatePipe, RouterLink, MatIconModule, MatProgressBarModule],
+  imports: [DatePipe, RouterLink, HistoryTimeline, MatIconModule, MatProgressBarModule],
   templateUrl: './asset-detail.page.html',
   styleUrl: './asset-detail.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,6 +23,13 @@ export class AssetDetailPage {
   // retarget the request to another API path (e.g. "..%2F..%2Fhealth").
   protected readonly asset = httpResource<AssetDetail>(
     () => `/api/assets/${encodeURIComponent(this.id())}`,
+  );
+
+  protected readonly history = httpResource<HistoryEntry[]>(
+    () => `/api/assets/${encodeURIComponent(this.id())}/history`,
+  );
+  protected readonly historyError = computed(() =>
+    this.history.error() ? describeError(this.history.error()) : null,
   );
 
   protected readonly notFound = computed(

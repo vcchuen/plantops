@@ -57,6 +57,17 @@
         >
           Assets
         </a>
+        <a
+          mat-list-item
+          routerLink="/work-orders"
+          routerLinkActive
+          #workOrders="routerLinkActive"
+          ariaCurrentWhenActive="page"
+          [activated]="workOrders.isActive"
+          (click)="isHandset() && drawer.close()"
+        >
+          Work orders
+        </a>
       </mat-nav-list>
     </nav>
   </mat-sidenav>

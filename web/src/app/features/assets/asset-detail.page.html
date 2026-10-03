@@ -61,4 +61,14 @@
       <dd>{{ a.decommissionReason }}</dd>
     }
   </dl>
+
+  <h2>History</h2>
+  @if (historyError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  } @else if (history.hasValue()) {
+    <app-history-timeline [entries]="history.value()" />
+  }
 }

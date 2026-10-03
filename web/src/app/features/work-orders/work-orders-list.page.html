@@ -1,0 +1,99 @@
+<div class="heading">
+  <h1>Work orders</h1>
+  <a mat-flat-button routerLink="/work-orders/new">Raise work order</a>
+</div>
+
+<form
+  class="filters"
+  role="search"
+  aria-label="Filter work orders"
+  (submit)="$event.preventDefault()"
+>
+  <mat-form-field>
+    <mat-label>Status</mat-label>
+    <mat-select [value]="status() ?? ''" (selectionChange)="onFilter('status', $event.value)">
+      <mat-option value="">All statuses</mat-option>
+      @for (s of statuses; track s) {
+        <mat-option [value]="s">{{ statusLabels[s] }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Priority</mat-label>
+    <mat-select [value]="priority() ?? ''" (selectionChange)="onFilter('priority', $event.value)">
+      <mat-option value="">All priorities</mat-option>
+      @for (p of priorities; track p) {
+        <mat-option [value]="p">{{ priorityLabels[p] }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-checkbox [checked]="onlyMine()" (change)="onMine($event.checked)">
+    Assigned to me
+  </mat-checkbox>
+</form>
+
+@if (orders.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading work orders" />
+}
+
+@if (errorMessage(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else if (current(); as result) {
+  @if (result.items.length === 0) {
+    <p class="empty">No work orders match these filters</p>
+  } @else {
+    <table mat-table [dataSource]="result.items" aria-label="Work orders">
+      <ng-container matColumnDef="number">
+        <th mat-header-cell *matHeaderCellDef>Number</th>
+        <td mat-cell *matCellDef="let w">
+          <a [routerLink]="['/work-orders', w.id]">{{ w.number }}</a>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef>Title</th>
+        <td mat-cell *matCellDef="let w">{{ w.title }}</td>
+      </ng-container>
+      <ng-container matColumnDef="asset">
+        <th mat-header-cell *matHeaderCellDef>Asset</th>
+        <td mat-cell *matCellDef="let w">{{ w.assetTag }} — {{ w.assetName }}</td>
+      </ng-container>
+      <ng-container matColumnDef="priority">
+        <th mat-header-cell *matHeaderCellDef>Priority</th>
+        <td mat-cell *matCellDef="let w">{{ priorityLabel(w.priority) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let w">{{ statusLabel(w.status) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="sla">
+        <th mat-header-cell *matHeaderCellDef>SLA</th>
+        <td mat-cell *matCellDef="let w"><app-sla-badge [state]="w.slaState" /></td>
+      </ng-container>
+      <ng-container matColumnDef="due">
+        <th mat-header-cell *matHeaderCellDef>Due</th>
+        <td mat-cell *matCellDef="let w">{{ w.dueAt | date: 'short' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="assignee">
+        <th mat-header-cell *matHeaderCellDef>Assignee</th>
+        <td mat-cell *matCellDef="let w">{{ w.assigneeName ?? 'Unassigned' }}</td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+
+  <mat-paginator
+    [length]="result.totalCount"
+    [pageIndex]="page() - 1"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="pageSizeOptions"
+    showFirstLastButtons
+    aria-label="Select page of work orders"
+    (page)="onPage($event)"
+  />
+}
