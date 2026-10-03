@@ -90,10 +90,9 @@ public partial class WorkOrdersApiTests(WorkOrdersFixture fixture)
             request.Headers.TryAddWithoutValidation("If-Match", etag);
         }
 
-        if (body is not null)
-        {
-            request.Content = JsonContent.Create(body);
-        }
+        // Always a JSON body (possibly "{}"): endpoints that bind a body only match application/json requests,
+        // exactly like the SPA's HttpClient calls.
+        request.Content = JsonContent.Create(body ?? new { });
 
         return client.SendAsync(request, Ct);
     }
