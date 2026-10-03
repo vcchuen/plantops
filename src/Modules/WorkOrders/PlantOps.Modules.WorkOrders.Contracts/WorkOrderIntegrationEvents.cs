@@ -5,7 +5,10 @@ namespace PlantOps.Modules.WorkOrders.Contracts;
 // Public, versioned contracts (ADR-0009): fields may be added, never repurposed or removed.
 // They carry everything a consumer needs so consumers never call back into WorkOrders.
 
-/// <summary>A work order was completed. Inventory consumes its reserved parts; Assets records the maintenance.</summary>
+/// <summary>
+/// A work order was completed. Inventory consumes its reserved parts; Assets records the maintenance; Reporting
+/// projects a fact row. Priority ("P1".."P4") and Source ("Reactive"/"Preventive") are names, not the internal enums.
+/// </summary>
 public sealed record WorkOrderCompletedIntegrationEvent(
     Guid WorkOrderId,
     string Number,
@@ -16,7 +19,13 @@ public sealed record WorkOrderCompletedIntegrationEvent(
     DateTimeOffset StartedAt,
     DateTimeOffset CompletedAt,
     string TechnicianName,
-    bool AssetDown) : IIntegrationEvent;
+    bool AssetDown,
+    // Appended in M7 (ADR-0009: fields may be added, never repurposed). Appended at the END and nullable-free:
+    // messages already in an outbox lack them and deserialize to null/default, so Reporting treats a missing
+    // Priority/Source as "unknown" rather than failing.
+    string Priority,
+    string Source,
+    DateTimeOffset DueAt) : IIntegrationEvent;
 
 /// <summary>
 /// An open work order passed its deadline and was escalated (once). Forwarded to the Service Bus queue that feeds the

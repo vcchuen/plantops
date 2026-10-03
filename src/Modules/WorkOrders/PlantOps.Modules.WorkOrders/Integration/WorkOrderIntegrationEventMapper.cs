@@ -24,7 +24,10 @@ internal sealed class WorkOrderIntegrationEventMapper : IIntegrationEventMapper
             e.StartedAt,
             e.CompletedAt,
             e.TechnicianName,
-            e.AssetDown),
+            e.AssetDown,
+            e.Priority.ToString(),
+            e.Source.ToString(),
+            e.DueAt),
         WorkOrderSlaBreached e => new WorkOrderSlaBreachedIntegrationEvent(
             e.WorkOrderId,
             e.Number,
