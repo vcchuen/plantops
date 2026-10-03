@@ -49,10 +49,12 @@ interface PmModel {
   nextDueOn: string;
 }
 
-const integer = (label: string) => ({ value }: { value: () => number | null }) =>
-  value() !== null && !Number.isInteger(value())
-    ? { kind: 'integer', message: `${label} must be a whole number` }
-    : undefined;
+const integer =
+  (label: string) =>
+  ({ value }: { value: () => number | null }) =>
+    value() !== null && !Number.isInteger(value())
+      ? { kind: 'integer', message: `${label} must be a whole number` }
+      : undefined;
 
 /** One component for /pm-schedules/new and /pm-schedules/:id/edit; the mode is "is there an id". */
 @Component({

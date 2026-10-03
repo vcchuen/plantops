@@ -109,9 +109,7 @@ describe('PmScheduleDetailPage', () => {
     req.flush(null, { status: 204, statusText: 'No Content', headers: { ETag: '"AAAAAAAC"' } });
     await settle();
 
-    http
-      .expectOne(url)
-      .flush(detail({ isActive: false }), { headers: { ETag: '"AAAAAAAC"' } });
+    http.expectOne(url).flush(detail({ isActive: false }), { headers: { ETag: '"AAAAAAAC"' } });
     await fixture.whenStable();
     fixture.detectChanges();
     expect(actionButtons()).toEqual(['Activate']);
