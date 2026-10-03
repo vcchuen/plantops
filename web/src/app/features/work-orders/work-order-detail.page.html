@@ -19,9 +19,7 @@
   <h1>{{ w.number }} · {{ w.title }}</h1>
 
   <p class="sla-line">
-    @if (effectiveSla(); as sla) {
-      <app-sla-badge [state]="sla" />
-    }
+    <app-sla-badge [state]="effectiveSla()" />
     @if (countdown(); as text) {
       <span class="countdown">{{ text }}</span>
     }
@@ -64,16 +62,16 @@
     <dt>Description</dt>
     <dd class="multiline">{{ w.description || '—' }}</dd>
     <dt>Reported by</dt>
-    <dd>{{ w.reportedByName }}</dd>
+    <dd>{{ w.reportedBy.name }}</dd>
     <dt>Submitted</dt>
     <dd>{{ w.submittedAt | date: 'medium' }}</dd>
     <dt>Due</dt>
     <dd>{{ w.dueAt | date: 'medium' }}</dd>
     <dt>Assignee</dt>
-    <dd>{{ w.assigneeName ?? 'Unassigned' }}</dd>
-    @if (w.approvedByName) {
+    <dd>{{ w.assignedTo?.name ?? 'Unassigned' }}</dd>
+    @if (w.approvedBy) {
       <dt>Approved by</dt>
-      <dd>{{ w.approvedByName }}</dd>
+      <dd>{{ w.approvedBy.name }}</dd>
     }
     @if (w.startedAt) {
       <dt>Started</dt>

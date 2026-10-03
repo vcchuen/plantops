@@ -18,7 +18,7 @@ const item = (over: Partial<WorkOrderListItem> = {}): WorkOrderListItem => ({
   status: 'Assigned',
   slaState: 'AtRisk',
   dueAt: '2026-10-03T12:00:00Z',
-  assigneeName: 'Tom Tech',
+  assignedTo: { id: 't1', name: 'Tom Tech' },
   submittedAt: '2026-10-03T08:00:00Z',
   ...over,
 });
@@ -96,7 +96,7 @@ describe('WorkOrdersListPage', () => {
 
   it('shows "Unassigned" when there is no assignee', async () => {
     create();
-    listReq().flush(pageOf([item({ assigneeName: null, status: 'Submitted' })]));
+    listReq().flush(pageOf([item({ assignedTo: null, status: 'Submitted' })]));
     await fixture.whenStable();
     expect(el.textContent).toContain('Unassigned');
   });

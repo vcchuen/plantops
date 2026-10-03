@@ -102,6 +102,7 @@ export class WorkOrderDetailPage {
   protected readonly effectiveSla = computed((): SlaState | null => {
     if (!this.detail.hasValue()) return null;
     const w = this.detail.value();
+    if (w.slaState === null) return null;
     const open = w.slaState === 'OnTrack' || w.slaState === 'AtRisk';
     return open && this.now() > Date.parse(w.dueAt) ? 'Breached' : w.slaState;
   });

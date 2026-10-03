@@ -6,10 +6,14 @@ import { SLA_LABELS, SlaState } from './work-orders.models';
   selector: 'app-sla-badge',
   imports: [MatIconModule],
   template: `
-    <span class="badge" [class]="'sla-' + state().toLowerCase()">
-      <mat-icon aria-hidden="true">{{ label().icon }}</mat-icon>
-      <span class="visually-hidden">SLA: </span>{{ label().text }}
-    </span>
+    @if (label(); as l) {
+      <span class="badge" [class]="'sla-' + state()!.toLowerCase()">
+        <mat-icon aria-hidden="true">{{ l.icon }}</mat-icon>
+        <span class="visually-hidden">SLA: </span>{{ l.text }}
+      </span>
+    } @else {
+      <span aria-label="No SLA" role="img">—</span>
+    }
   `,
   styles: `
     .badge {
@@ -51,6 +55,9 @@ import { SLA_LABELS, SlaState } from './work-orders.models';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SlaBadge {
-  readonly state = input.required<SlaState>();
-  protected readonly label = computed(() => SLA_LABELS[this.state()]);
+  readonly state = input.required<SlaState | null>();
+  protected readonly label = computed(() => {
+    const s = this.state();
+    return s ? SLA_LABELS[s] : null;
+  });
 }

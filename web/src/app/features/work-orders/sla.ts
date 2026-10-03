@@ -1,7 +1,7 @@
 import { SlaState } from './work-orders.models';
 
 /** Only open work orders have a live countdown; Met/Missed are settled facts. */
-export function isOpenSla(state: SlaState): boolean {
+export function isOpenSla(state: SlaState | null): boolean {
   return state === 'OnTrack' || state === 'AtRisk' || state === 'Breached';
 }
 

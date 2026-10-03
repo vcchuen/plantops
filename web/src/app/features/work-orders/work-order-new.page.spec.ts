@@ -64,7 +64,7 @@ describe('WorkOrderNewPage', () => {
 
   it('blocks submit while the title is too long, then enables when valid', () => {
     pick(asset());
-    type('input[type="text"]:not([role="combobox"])', 'x'.repeat(121));
+    type('input[type="text"]:not([role="combobox"])', 'x'.repeat(201));
     expect(submitBtn().disabled).toBe(true);
 
     type('input[type="text"]:not([role="combobox"])', 'Conveyor jam');

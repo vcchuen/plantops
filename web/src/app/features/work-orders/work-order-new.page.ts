@@ -59,7 +59,7 @@ export class WorkOrderNewPage {
   protected readonly raiseForm = form(this.model, (p) => {
     required(p.assetId, { message: 'Choose an asset from the list' });
     required(p.title, { message: 'Title is required' });
-    maxLength(p.title, 120, { message: 'Title must be at most 120 characters' });
+    maxLength(p.title, 200, { message: 'Title must be at most 200 characters' });
     maxLength(p.description, 2000, { message: 'Description must be at most 2000 characters' });
     required(p.priority, { message: 'Priority is required' });
   });

@@ -11,6 +11,14 @@ const EVENT_LABELS: Record<string, string> = {
   AssetRelocated: 'Relocated',
   AssetCriticalityChanged: 'Criticality changed',
   AssetDecommissioned: 'Decommissioned',
+  WorkOrderSubmitted: 'Submitted',
+  WorkOrderApproved: 'Approved',
+  WorkOrderRejected: 'Rejected',
+  WorkOrderAssigned: 'Assigned',
+  WorkOrderStarted: 'Work started',
+  WorkOrderCompleted: 'Completed',
+  WorkOrderClosed: 'Closed',
+  WorkOrderCancelled: 'Cancelled',
 };
 
 /** Unknown event types still read as a sentence ("WorkOrderApproved" -> "Work order approved"). */

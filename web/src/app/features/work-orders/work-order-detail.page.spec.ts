@@ -24,10 +24,9 @@ const detail = (over: Partial<WorkOrderDetail> = {}): WorkOrderDetail => ({
   startedAt: null,
   completedAt: null,
   closedAt: null,
-  reportedByName: 'Olivia Operator',
-  approvedByName: null,
-  assigneeId: 't1',
-  assigneeName: 'Tom Tech',
+  reportedBy: { id: 'u1', name: 'Olivia Operator' },
+  approvedBy: null,
+  assignedTo: { id: 't1', name: 'Tom Tech' },
   resolution: null,
   rejectionReason: null,
   cancellationReason: null,
@@ -40,7 +39,7 @@ const history = [
     eventType: 'WorkOrderAssigned',
     actorName: 'Sam Supervisor',
     occurredAt: '2026-10-03T13:00:00Z',
-    payload: { assigneeName: 'Tom Tech' },
+    payload: { technicianId: 't1', technicianName: 'Tom Tech' },
   },
   {
     eventType: 'WorkOrderSubmitted',
@@ -109,7 +108,7 @@ describe('WorkOrderDetailPage', () => {
 
     const items = el.querySelectorAll('ol.timeline li');
     expect(items.length).toBe(2);
-    expect(items[0].textContent).toContain('Work order assigned');
+    expect(items[0].textContent).toContain('Assigned');
     expect(items[0].textContent).toContain('Sam Supervisor');
   });
 
@@ -232,6 +231,14 @@ describe('WorkOrderDetailPage', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('renders a null SLA (rejected/cancelled) as "No SLA" with no countdown or flip', async () => {
+    create();
+    load(detail({ slaState: null, status: 'Rejected', allowedActions: [] }));
+    await fixture.whenStable();
+    expect(el.querySelector('app-sla-badge [aria-label="No SLA"]')).not.toBeNull();
+    expect(el.querySelector('.countdown')).toBeNull();
   });
 
   it('does not show a countdown for a settled SLA', async () => {

@@ -12,6 +12,11 @@ export type SlaState = 'OnTrack' | 'AtRisk' | 'Breached' | 'Met' | 'Missed';
 export type WorkOrderAction =
   'approve' | 'reject' | 'assign' | 'start' | 'complete' | 'close' | 'cancel';
 
+export interface PersonRef {
+  id: string;
+  name: string;
+}
+
 export interface WorkOrderListItem {
   id: string;
   number: string;
@@ -21,9 +26,10 @@ export interface WorkOrderListItem {
   assetName: string;
   priority: Priority;
   status: WorkOrderStatus;
-  slaState: SlaState;
+  // null for Rejected and Cancelled: no clock runs.
+  slaState: SlaState | null;
   dueAt: string;
-  assigneeName: string | null;
+  assignedTo: PersonRef | null;
   submittedAt: string;
 }
 
@@ -45,17 +51,17 @@ export interface WorkOrderDetail {
   priority: Priority;
   assetDown: boolean;
   status: WorkOrderStatus;
-  slaState: SlaState;
+  // null for Rejected and Cancelled: no clock runs.
+  slaState: SlaState | null;
   dueAt: string;
   submittedAt: string;
   approvedAt: string | null;
   startedAt: string | null;
   completedAt: string | null;
   closedAt: string | null;
-  reportedByName: string;
-  approvedByName: string | null;
-  assigneeId: string | null;
-  assigneeName: string | null;
+  reportedBy: PersonRef;
+  approvedBy: PersonRef | null;
+  assignedTo: PersonRef | null;
   resolution: string | null;
   rejectionReason: string | null;
   cancellationReason: string | null;
@@ -74,6 +80,7 @@ export interface Technician {
   id: string;
   name: string;
   email: string;
+  roles?: string[];
 }
 
 export const PRIORITY_LABELS: Record<Priority, string> = {

@@ -25,9 +25,9 @@ describe('HistoryTimeline', () => {
     ]);
     const items = el.querySelectorAll('ol > li');
     expect(items.length).toBe(2);
-    expect(items[0].textContent).toContain('Work order approved');
+    expect(items[0].textContent).toContain('Approved');
     expect(items[0].textContent).toContain('by Sam Supervisor');
-    expect(items[1].textContent).toContain('Work order submitted');
+    expect(items[1].textContent).toContain('Submitted');
     expect(items[0].querySelector('time')?.getAttribute('datetime')).toBe('2026-10-03T08:30:00Z');
   });
 
@@ -45,6 +45,7 @@ describe('HistoryTimeline', () => {
 describe('history models', () => {
   it('labels known asset events and humanises unknown ones', () => {
     expect(eventLabel('AssetCriticalityChanged')).toBe('Criticality changed');
+    expect(eventLabel('WorkOrderStarted')).toBe('Work started');
     expect(eventLabel('SomethingNewHappened')).toBe('Something new happened');
   });
 
