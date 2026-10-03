@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'status' },
@@ -9,6 +10,7 @@ export const routes: Routes = [
   },
   {
     path: 'assets',
+    canMatch: [authGuard],
     loadChildren: () => import('./features/assets/assets.routes').then((m) => m.ASSETS_ROUTES),
   },
   {

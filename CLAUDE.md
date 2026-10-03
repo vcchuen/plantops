@@ -8,7 +8,7 @@ The user studies the code to defend it in senior .NET + Angular interviews. **Th
 2. Work on a branch per milestone (`mN-name`) in small conventional commits. Open a PR with a PR-style summary.
 3. After each milestone, write `docs/study/NN-name.md` with: first-principles concepts, a guided code tour in reading order, "why this, not that", pitfalls, 5 interview Q&As in `<details>`, and one "break it" lab.
 4. Comment only non-obvious code, and say WHY.
-5. **STOP after each milestone** and wait for the user to say "next".
+5. ~~STOP after each milestone~~ **Changed by the user on 2026-10-03: continue automatically to the next milestone. Stop only if the token budget runs low.** Skip DB/server/Azure deployment steps; write the code and config, and validate via CI.
 6. Never invent numbers (performance, cost). Measure them or leave them out.
 7. The `review-me` branch with planted bugs comes after M7. Never reveal the bug locations.
 
@@ -30,6 +30,9 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - After `dotnet ef migrations add`, change the generated migration class from `public` to `internal`, or the architecture test fails.
 - Integration tests skip locally unless `PLANTOPS_INTEGRATION_TESTS=1`. CI runs them, so push and check CI to validate them.
 - Merging PRs is blocked for Claude by the user's permission rules. Stack branches and let the user merge.
+- Auth (M3): BFF cookie (`__Host-plantops`), fallback policy = authenticated, policies in Identity.Contracts, CSRF guard requires `X-CSRF: 1` on unsafe /api requests. Tests use the `X-Test-User` test scheme (tests/PlantOps.Api.Tests/Support/TestAuth.cs). New write endpoints need `.RequireAuthorization(Policies.X)`. Clients in tests must send `X-CSRF`.
+- Keycloak compose wiring (KC_HOSTNAME + BACKCHANNEL_DYNAMIC) and its healthcheck are unverified until compose actually runs.
+- Verify framework-behaviour claims from subagents with a probe. In M3 an agent wrongly claimed `MapJsonKey` doesn't split arrays.
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -39,7 +42,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 |---|-----------|--------|
 | 1 | Foundation & walking skeleton | done (PR #1 — user must merge; auto-merge is blocked by permissions) |
 | 2 | Assets module (DDD basics) | done (PR #2, stacked on m1-foundation) |
-| 3 | Identity & authorisation (Keycloak/OIDC) | — |
+| 3 | Identity & authorisation (Keycloak/OIDC) | done (PR #3, stacked on m2-assets) |
 | 4 | Work order lifecycle | — |
 | 5 | Inventory + events between modules (outbox) | — |
 | 6 | SLA escalation + preventive maintenance | — |

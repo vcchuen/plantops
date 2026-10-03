@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\PlantOps.SharedKernel\PlantOps.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Identity\PlantOps.Modules.Identity.Contracts\PlantOps.Modules.Identity.Contracts.csproj" />
     <ProjectReference Include="..\PlantOps.Modules.Assets.Contracts\PlantOps.Modules.Assets.Contracts.csproj" />
   </ItemGroup>
 

@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using PlantOps.Api.Tests;
 using PlantOps.Modules.Assets.Infrastructure;
+using PlantOps.Modules.Identity.Contracts;
 
 namespace PlantOps.Modules.Assets.Tests.Integration;
 
@@ -15,7 +17,8 @@ public class AssetsApiTests(SqlServerFixture fixture)
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private HttpClient CreateClient() => fixture.Factory.CreateClient();
+    // Signed in as a supervisor, with the CSRF header, so the existing tests keep their meaning.
+    private HttpClient CreateClient() => fixture.Factory.CreateClient().AsUser("Sam", Roles.Supervisor).WithCsrf();
 
     private static string NewPrefix() => "T" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
 
@@ -371,5 +374,45 @@ public class AssetsApiTests(SqlServerFixture fixture)
         {
             await AssertProblem(response, HttpStatusCode.NotFound);
         }
+    }
+
+    [IntegrationFact]
+    public async Task Operator_cannot_register_an_asset()
+    {
+        using var client = fixture.Factory.CreateClient().AsUser("Olivia", Roles.Operator).WithCsrf();
+
+        var response = await client.PostAsJsonAsync("/api/assets", NewAssetBody(NewPrefix() + "-OP"), Ct);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [IntegrationFact]
+    public async Task Operator_can_read_assets()
+    {
+        using var client = fixture.Factory.CreateClient().AsUser("Olivia", Roles.Operator);
+
+        var response = await client.GetAsync("/api/assets", Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [IntegrationFact]
+    public async Task Anonymous_list_returns_401()
+    {
+        using var client = fixture.Factory.CreateClient();
+
+        var response = await client.GetAsync("/api/assets", Ct);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [IntegrationFact]
+    public async Task Register_without_csrf_header_returns_400()
+    {
+        using var client = fixture.Factory.CreateClient().AsUser("Sam", Roles.Supervisor);
+
+        var response = await client.PostAsJsonAsync("/api/assets", NewAssetBody(NewPrefix() + "-CS"), Ct);
+
+        await AssertProblem(response, HttpStatusCode.BadRequest);
     }
 }

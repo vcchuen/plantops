@@ -71,6 +71,10 @@ export function isProblem(body: unknown): body is ProblemDetails {
 }
 
 export function describeError(error: unknown): string {
+  // 403 first: the problem body of a forbidden response is a generic "Forbidden".
+  if ((error as { status?: number } | undefined)?.status === 403) {
+    return "You don't have permission to view this. Ask a supervisor if you need access.";
+  }
   const body = (error as { error?: unknown } | undefined)?.error;
   if (isProblem(body)) {
     return [body.title, body.detail].filter(Boolean).join(': ');

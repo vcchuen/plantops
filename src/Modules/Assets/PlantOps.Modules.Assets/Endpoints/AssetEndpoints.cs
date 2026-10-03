@@ -6,6 +6,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PlantOps.Modules.Assets.Domain;
 using PlantOps.Modules.Assets.Infrastructure;
+using PlantOps.Modules.Identity.Contracts;
 using PlantOps.SharedKernel;
 
 namespace PlantOps.Modules.Assets.Endpoints;
@@ -25,11 +26,16 @@ internal static class AssetEndpoints
         group.MapGet("/lines", ListLines);
         group.MapGet("", ListAssets);
         group.MapGet("/{id:guid}", GetAsset).ProducesProblem(StatusCodes.Status404NotFound);
-        group.MapPost("", RegisterAsset).ProducesProblem(StatusCodes.Status409Conflict);
-        group.MapPut("/{id:guid}/details", UpdateDetails).ProducesProblem(StatusCodes.Status404NotFound);
-        group.MapPost("/{id:guid}/relocate", Relocate).ProducesProblem(StatusCodes.Status404NotFound);
-        group.MapPost("/{id:guid}/criticality", ChangeCriticality).ProducesProblem(StatusCodes.Status404NotFound);
-        group.MapPost("/{id:guid}/decommission", Decommission).ProducesProblem(StatusCodes.Status404NotFound);
+        group.MapPost("", RegisterAsset).ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireAuthorization(Policies.ManageAssets);
+        group.MapPut("/{id:guid}/details", UpdateDetails).ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(Policies.ManageAssets);
+        group.MapPost("/{id:guid}/relocate", Relocate).ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(Policies.ManageAssets);
+        group.MapPost("/{id:guid}/criticality", ChangeCriticality).ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(Policies.ManageAssets);
+        group.MapPost("/{id:guid}/decommission", Decommission).ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(Policies.ManageAssets);
     }
 
     private static async Task<Ok<LineResponse[]>> ListLines(AssetsDbContext db, CancellationToken ct)

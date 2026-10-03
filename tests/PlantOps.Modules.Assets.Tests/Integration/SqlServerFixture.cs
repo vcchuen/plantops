@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using PlantOps.Api.Tests;
 using PlantOps.Modules.Assets.Infrastructure;
 using Testcontainers.MsSql;
 
@@ -39,7 +40,10 @@ public sealed class SqlServerFixture : IAsyncLifetime
             // The module's hosted service runs MigrateAsync() while the host starts, so the tests exercise the real migrations.
             builder.UseSetting("Database:ApplyMigrationsOnStartup", "true");
             builder.ConfigureTestServices(services =>
-                services.ConfigureDbContext<AssetsDbContext>(options => options.AddInterceptors(Commands)));
+            {
+                services.ConfigureDbContext<AssetsDbContext>(options => options.AddInterceptors(Commands));
+                services.AddTestAuthentication();
+            });
         });
 
         // The host (and therefore the migration) starts lazily on first use.

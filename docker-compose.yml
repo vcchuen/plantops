@@ -17,6 +17,30 @@ services:
       retries: 10
       start_period: 30s
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set it in .env}
+      # KC_HOSTNAME is the issuer URL as seen by the browser (localhost:8081).
+      # KC_HOSTNAME_BACKCHANNEL_DYNAMIC allows the API container to reach Keycloak via the service name (keycloak:8080)
+      # for back-channel operations (token endpoint, JWKS), while tokens still carry iss=http://localhost:8081/...
+      KC_HOSTNAME: http://localhost:8081
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./deploy/keycloak/plantops-realm.json:/opt/keycloak/data/import/plantops-realm.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   api:
     build: .
     ports:
@@ -24,12 +48,19 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
     environment:
       # The PlantOps database does not exist yet on first start: ApplyMigrationsOnStartup lets the Assets
       # module create it and migrate it (EF's Migrate creates a missing database). Azure uses migration bundles instead.
       # TrustServerCertificate=True accepts the container's self-signed cert; acceptable for local compose only.
       ConnectionStrings__PlantOps: "Server=sqlserver,1433;Database=PlantOps;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
       Database__ApplyMigrationsOnStartup: "true"
+      Auth__Authority: http://localhost:8081/realms/plantops
+      Auth__MetadataAddress: http://keycloak:8080/realms/plantops/.well-known/openid-configuration
+      Auth__ClientId: plantops-web
+      Auth__ClientSecret: ${KEYCLOAK_CLIENT_SECRET:?set it in .env}
+      Auth__RequireHttpsMetadata: "false"
 
 volumes:
   sqlserver-data:
