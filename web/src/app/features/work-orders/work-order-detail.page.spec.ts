@@ -78,12 +78,15 @@ describe('WorkOrderDetailPage', () => {
 
   const detailUrl = '/api/work-orders/w1';
   const historyUrl = '/api/work-orders/w1/history';
+  const commentsUrl = '/api/work-orders/w1/comments';
 
   function create() {
     fixture = TestBed.createComponent(WorkOrderDetailPage);
     el = fixture.nativeElement;
     fixture.componentRef.setInput('id', 'w1');
     fixture.detectChanges();
+    // The comments section has its own request; it is covered in work-order-comments.spec.ts.
+    http.expectOne(commentsUrl).flush([]);
   }
 
   const reservationsReq = () =>

@@ -6,11 +6,16 @@ export const WORK_ORDERS_ROUTES: Routes = [
     title: 'Work orders · PlantOps',
     loadComponent: () => import('./work-orders-list.page').then((m) => m.WorkOrdersListPage),
   },
-  // Before ':id', or "new" would be captured as an id.
+  // Before ':id', or "new" and "queue" would be captured as ids.
   {
     path: 'new',
     title: 'Raise work order · PlantOps',
     loadComponent: () => import('./work-order-new.page').then((m) => m.WorkOrderNewPage),
+  },
+  {
+    path: 'queue',
+    title: 'My queue · PlantOps',
+    loadComponent: () => import('./work-orders-queue.page').then((m) => m.WorkOrdersQueuePage),
   },
   {
     path: ':id',

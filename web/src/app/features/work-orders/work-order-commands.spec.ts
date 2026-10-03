@@ -45,6 +45,24 @@ describe('WorkOrderCommands', () => {
     expect((await result).id).toBe('wo1');
   });
 
+  it('posts a comment and returns it', async () => {
+    const result = commands.addComment('wo 1', 'Waiting for parts');
+    const req = http.expectOne('/api/work-orders/wo%201/comments');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ body: 'Waiting for parts' });
+    req.flush({ id: 'c1', sequence: 1 }, { status: 201, statusText: 'Created' });
+    expect((await result).sequence).toBe(1);
+  });
+
+  it('edits a comment with PUT', async () => {
+    const result = commands.editComment('wo1', 'c1', 'Fixed');
+    const req = http.expectOne('/api/work-orders/wo1/comments/c1');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ body: 'Fixed' });
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    await expect(result).resolves.toBeUndefined();
+  });
+
   it('rejects with the HttpErrorResponse so callers can read the status', async () => {
     const result = commands.execute('wo1', 'close', '"x"');
     http

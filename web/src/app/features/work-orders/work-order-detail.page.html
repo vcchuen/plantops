@@ -193,3 +193,7 @@
     <app-history-timeline [entries]="history.value()" />
   }
 }
+
+@if (!notFound() && !errorMessage()) {
+  <app-work-order-comments [workOrderId]="id()" />
+}
