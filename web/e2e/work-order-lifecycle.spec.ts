@@ -56,7 +56,9 @@ test('work order lifecycle across operator, supervisor and technician; stock dro
     await expect(actionButton(page, 'Complete')).toBeVisible();
     await actionButton(page, 'Complete').click();
     await confirmInDialog(page, 'Complete', async (d) => {
-      await d.getByLabel('Resolution').fill('Replaced the clogged nozzle and re-ran the line check.');
+      await d
+        .getByLabel('Resolution')
+        .fill('Replaced the clogged nozzle and re-ran the line check.');
     });
     await expect(page.getByText('Stock is updated shortly after completion.')).toBeVisible();
   });
