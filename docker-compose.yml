@@ -61,6 +61,31 @@ services:
       Auth__ClientId: plantops-web
       Auth__ClientSecret: ${KEYCLOAK_CLIENT_SECRET:?set it in .env}
       Auth__RequireHttpsMetadata: "false"
+      # Service Bus configuration (optional; only set when messaging profile is active).
+      # When empty, SLA breach notifications are logged but not published to Service Bus.
+      # To enable: set SERVICEBUS_CONNECTION_STRING in .env or run with --profile messaging.
+      ServiceBus__ConnectionString: ${SERVICEBUS_CONNECTION_STRING:-}
+      ServiceBus__SlaBreachQueue: sla-breaches
+
+  # Service Bus emulator for local SLA breach messaging (Decision 2 in ADR-0006).
+  # Why optional? The API logs SLA breaches when Service Bus is not configured; the queue decouples
+  # escalation detection (API) from notification delivery (Azure Function). Enable with: docker compose --profile messaging up
+  servicebus:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    profiles:
+      - messaging
+    environment:
+      ACCEPT_EULA: "Y"
+      SQL_SERVER: sqlserver
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "5300:5300"
+    volumes:
+      - ./deploy/servicebus/Config.json:/ServiceBus_Emulator/ConfigFiles/Config.json:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
 
 volumes:
   sqlserver-data:
