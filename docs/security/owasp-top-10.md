@@ -24,7 +24,7 @@ For each category below: **how it's handled** (with files), **how it's tested**,
 - `IdentityHostTests`: 401 vs 403, the open-redirect cases, and an operator getting 403 on manage-assets.
 - The authorisation matrix in `WorkOrdersApiTests`, the `WorkOrderAccessTests` null cases (lab 04), and E2E `permissions.spec.ts`.
 
-**Gaps:** none known. The `review-me` branch deliberately contains an A01 bug for review practice.
+**Gaps:** none known.
 
 ## A02:2025 Security Misconfiguration
 **How it's handled**
@@ -74,7 +74,7 @@ For each category below: **how it's handled** (with files), **how it's tested**,
 
 **Tests:** `SpreadsheetTextTests`, the wildcard search integration test, `IntegrationEventRegistryTests`, and the workbook round-trip test.
 
-**Gaps:** none known. The `review-me` branch contains an XSS for practice.
+**Gaps:** none known.
 
 ## A06:2025 Insecure Design
 **How it's handled**
