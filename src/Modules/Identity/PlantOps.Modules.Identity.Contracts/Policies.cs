@@ -11,4 +11,10 @@ public static class Policies
 
     /// <summary>Register spare parts and receive stock. Held by <see cref="Roles.Supervisor"/> and <see cref="Roles.Admin"/>.</summary>
     public const string ManageInventory = "inventory:manage";
+
+    /// <summary>Read the MTTR, SLA and downtime reports and export them. Held by <see cref="Roles.Supervisor"/> and <see cref="Roles.Admin"/>.</summary>
+    public const string ViewReports = "reports:view";
+
+    /// <summary>Re-project the reporting read model from the source modules. Held by <see cref="Roles.Admin"/> only.</summary>
+    public const string RebuildReports = "reports:rebuild";
 }

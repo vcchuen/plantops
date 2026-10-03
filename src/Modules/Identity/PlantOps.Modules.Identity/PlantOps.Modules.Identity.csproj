@@ -20,6 +20,7 @@
     <InternalsVisibleTo Include="PlantOps.Api.Tests" />
     <InternalsVisibleTo Include="PlantOps.Modules.WorkOrders.Tests" />
     <InternalsVisibleTo Include="PlantOps.Modules.Inventory.Tests" />
+    <InternalsVisibleTo Include="PlantOps.Modules.Reporting.Tests" />
   </ItemGroup>
 
 </Project>
