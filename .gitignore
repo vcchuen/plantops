@@ -14,6 +14,9 @@ coverage/
 playwright-report/
 test-results/
 web/e2e/.auth/
+# README media capture output (copied to docs/images by hand)
+web/e2e/media/video/
+web/e2e/media/
 
 # Env / secrets
 .env
