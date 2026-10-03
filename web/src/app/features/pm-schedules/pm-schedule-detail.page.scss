@@ -17,20 +17,10 @@ dd {
   white-space: pre-line;
 }
 
-.sla-line {
+.status {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.escalated-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--mat-sys-error-container);
-  color: var(--mat-sys-on-error-container);
+  gap: 4px;
 }
 
 .actions {
@@ -38,26 +28,6 @@ dd {
   flex-wrap: wrap;
   gap: 8px;
   margin: 16px 0;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-th,
-td {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
-}
-
-.num {
-  text-align: right;
-}
-
-.note {
-  color: var(--mat-sys-on-surface-variant);
 }
 
 .error {

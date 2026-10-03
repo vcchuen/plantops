@@ -16,6 +16,35 @@ table {
   width: 100%;
 }
 
+.chip,
+.escalated {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-small);
+  white-space: nowrap;
+}
+
+.chip {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.escalated {
+  padding-left: 4px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+}
+
 .empty {
   padding: 24px 0;
   color: var(--mat-sys-on-surface-variant);

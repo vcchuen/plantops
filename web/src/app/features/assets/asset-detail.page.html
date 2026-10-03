@@ -22,7 +22,7 @@
       <span>
         Decommissioned
         @if (a.decommissionedOn) {
-          on {{ a.decommissionedOn | date: 'mediumDate' }}
+          on {{ a.decommissionedOn | date: 'mediumDate' : 'UTC' }}
         }
         @if (a.decommissionReason) {
           &mdash; {{ a.decommissionReason }}
@@ -51,10 +51,10 @@
     <dt>Status</dt>
     <dd>{{ statusLabels[a.status] }}</dd>
     <dt>Commissioned</dt>
-    <dd>{{ a.commissionedOn | date: 'mediumDate' }}</dd>
+    <dd>{{ a.commissionedOn | date: 'mediumDate' : 'UTC' }}</dd>
     @if (a.decommissionedOn) {
       <dt>Decommissioned</dt>
-      <dd>{{ a.decommissionedOn | date: 'mediumDate' }}</dd>
+      <dd>{{ a.decommissionedOn | date: 'mediumDate' : 'UTC' }}</dd>
     }
     @if (a.decommissionReason) {
       <dt>Decommission reason</dt>

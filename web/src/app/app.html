@@ -79,6 +79,17 @@
         >
           Inventory
         </a>
+        <a
+          mat-list-item
+          routerLink="/pm-schedules"
+          routerLinkActive
+          #pmSchedules="routerLinkActive"
+          ariaCurrentWhenActive="page"
+          [activated]="pmSchedules.isActive"
+          (click)="isHandset() && drawer.close()"
+        >
+          PM schedules
+        </a>
       </mat-nav-list>
     </nav>
   </mat-sidenav>
