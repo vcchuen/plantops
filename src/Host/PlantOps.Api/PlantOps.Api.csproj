@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\Modules\Assets\PlantOps.Modules.Assets\PlantOps.Modules.Assets.csproj" />
     <ProjectReference Include="..\..\Modules\WorkOrders\PlantOps.Modules.WorkOrders\PlantOps.Modules.WorkOrders.csproj" />
     <ProjectReference Include="..\..\Modules\Inventory\PlantOps.Modules.Inventory\PlantOps.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\..\Modules\Reporting\PlantOps.Modules.Reporting\PlantOps.Modules.Reporting.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\PlantOps.Modules.Identity\PlantOps.Modules.Identity.csproj" />
   </ItemGroup>
 

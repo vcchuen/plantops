@@ -5,6 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
   </ItemGroup>
@@ -12,16 +13,14 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\PlantOps.BuildingBlocks.Infrastructure\PlantOps.BuildingBlocks.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\PlantOps.SharedKernel\PlantOps.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Assets\PlantOps.Modules.Assets.Contracts\PlantOps.Modules.Assets.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\PlantOps.Modules.Identity.Contracts\PlantOps.Modules.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\WorkOrders\PlantOps.Modules.WorkOrders.Contracts\PlantOps.Modules.WorkOrders.Contracts.csproj" />
-    <ProjectReference Include="..\PlantOps.Modules.Assets.Contracts\PlantOps.Modules.Assets.Contracts.csproj" />
+    <ProjectReference Include="..\PlantOps.Modules.Reporting.Contracts\PlantOps.Modules.Reporting.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="PlantOps.Api.Tests" />
-    <InternalsVisibleTo Include="PlantOps.Modules.Assets.Tests" />
-    <InternalsVisibleTo Include="PlantOps.Modules.WorkOrders.Tests" />
-    <InternalsVisibleTo Include="PlantOps.Modules.Inventory.Tests" />
     <InternalsVisibleTo Include="PlantOps.Modules.Reporting.Tests" />
   </ItemGroup>
 

@@ -20,6 +20,8 @@ COPY src/Modules/WorkOrders/PlantOps.Modules.WorkOrders/PlantOps.Modules.WorkOrd
 COPY src/Modules/WorkOrders/PlantOps.Modules.WorkOrders.Contracts/PlantOps.Modules.WorkOrders.Contracts.csproj src/Modules/WorkOrders/PlantOps.Modules.WorkOrders.Contracts/
 COPY src/Modules/Inventory/PlantOps.Modules.Inventory/PlantOps.Modules.Inventory.csproj src/Modules/Inventory/PlantOps.Modules.Inventory/
 COPY src/Modules/Inventory/PlantOps.Modules.Inventory.Contracts/PlantOps.Modules.Inventory.Contracts.csproj src/Modules/Inventory/PlantOps.Modules.Inventory.Contracts/
+COPY src/Modules/Reporting/PlantOps.Modules.Reporting/PlantOps.Modules.Reporting.csproj src/Modules/Reporting/PlantOps.Modules.Reporting/
+COPY src/Modules/Reporting/PlantOps.Modules.Reporting.Contracts/PlantOps.Modules.Reporting.Contracts.csproj src/Modules/Reporting/PlantOps.Modules.Reporting.Contracts/
 COPY src/Modules/Identity/PlantOps.Modules.Identity/PlantOps.Modules.Identity.csproj src/Modules/Identity/PlantOps.Modules.Identity/
 COPY src/Modules/Identity/PlantOps.Modules.Identity.Contracts/PlantOps.Modules.Identity.Contracts.csproj src/Modules/Identity/PlantOps.Modules.Identity.Contracts/
 RUN dotnet restore src/Host/PlantOps.Api/PlantOps.Api.csproj
