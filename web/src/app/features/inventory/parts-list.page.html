@@ -1,0 +1,88 @@
+<div class="heading">
+  <h1>Inventory</h1>
+  @if (session.isSupervisorOrAdmin()) {
+    <button mat-flat-button type="button" (click)="newPart()">New part</button>
+  }
+</div>
+
+<form class="filters" role="search" aria-label="Filter parts" (submit)="$event.preventDefault()">
+  <mat-form-field class="search">
+    <mat-label>Search part number or name</mat-label>
+    <input
+      matInput
+      type="search"
+      [value]="search() ?? ''"
+      (input)="onSearch($any($event.target).value)"
+    />
+  </mat-form-field>
+
+  <mat-checkbox [checked]="lowStockOnly()" (change)="onLowStock($event.checked)">
+    Low stock only
+  </mat-checkbox>
+</form>
+
+@if (parts.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading parts" />
+}
+
+@if (errorMessage(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else if (current(); as result) {
+  @if (result.items.length === 0) {
+    <p class="empty">No parts match these filters</p>
+  } @else {
+    <table mat-table [dataSource]="result.items" aria-label="Parts">
+      <ng-container matColumnDef="partNumber">
+        <th mat-header-cell *matHeaderCellDef>Part no.</th>
+        <td mat-cell *matCellDef="let p">
+          <a [routerLink]="['/inventory', p.id]">{{ p.partNumber }}</a>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let p">{{ p.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="bin">
+        <th mat-header-cell *matHeaderCellDef>Bin</th>
+        <td mat-cell *matCellDef="let p">{{ p.binLocation || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="onHand">
+        <th mat-header-cell *matHeaderCellDef class="num">On hand</th>
+        <td mat-cell *matCellDef="let p" class="num">{{ p.quantityOnHand }}</td>
+      </ng-container>
+      <ng-container matColumnDef="reserved">
+        <th mat-header-cell *matHeaderCellDef class="num">Reserved</th>
+        <td mat-cell *matCellDef="let p" class="num">{{ p.quantityReserved }}</td>
+      </ng-container>
+      <ng-container matColumnDef="available">
+        <th mat-header-cell *matHeaderCellDef class="num">Available</th>
+        <td mat-cell *matCellDef="let p" class="num">{{ p.quantityAvailable }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let p">
+          @if (p.isLowStock) {
+            <span class="low"><mat-icon aria-hidden="true">warning</mat-icon>Low stock</span>
+          } @else {
+            <span class="ok"><mat-icon aria-hidden="true">check_circle</mat-icon>In stock</span>
+          }
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+
+  <mat-paginator
+    [length]="result.totalCount"
+    [pageIndex]="page() - 1"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="pageSizeOptions"
+    showFirstLastButtons
+    aria-label="Select page of parts"
+    (page)="onPage($event)"
+  />
+}

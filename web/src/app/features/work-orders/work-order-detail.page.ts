@@ -16,7 +16,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { firstValueFrom } from 'rxjs';
+import { SessionStore } from '../../core/auth/session.store';
 import { describeError } from '../assets/assets.models';
+import { InventoryCommands, describeInventoryError } from '../inventory/inventory-commands';
+import { RESERVATION_STATUS_LABELS, ReservationItem } from '../inventory/inventory.models';
+import { ReservePartDialog, ReservePartDialogData } from '../inventory/reserve-part.dialog';
 import { HistoryEntry } from '../shared/history.models';
 import { HistoryTimeline } from '../shared/history-timeline';
 import { isOpenSla, slaCountdown } from './sla';
@@ -59,6 +63,8 @@ export class WorkOrderDetailPage {
   private readonly commands = inject(WorkOrderCommands);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly inventory = inject(InventoryCommands);
+  private readonly session = inject(SessionStore);
 
   readonly id = input.required<string>();
 
@@ -69,6 +75,34 @@ export class WorkOrderDetailPage {
   protected readonly history = httpResource<HistoryEntry[]>(
     () => `/api/work-orders/${this.encodedId()}/history`,
   );
+
+  protected readonly reservations = httpResource<ReservationItem[]>(() => ({
+    url: '/api/inventory/reservations',
+    params: { workOrderId: this.id() },
+  }));
+  protected readonly reservationsError = computed(() =>
+    this.reservations.error() ? describeError(this.reservations.error()) : null,
+  );
+  protected readonly partsError = signal<string | null>(null);
+
+  // Hides the buttons only; the server enforces who may reserve or release. Mirrors its rule:
+  // the order must be Assigned/InProgress and the user either works it (start/complete are
+  // only offered to the assigned technician) or is a supervisor/admin.
+  protected readonly canReserve = computed(() => {
+    if (!this.detail.hasValue()) return false;
+    const w = this.detail.value();
+    if (w.status !== 'Assigned' && w.status !== 'InProgress') return false;
+    return (
+      w.allowedActions.includes('start') ||
+      w.allowedActions.includes('complete') ||
+      this.session.isSupervisorOrAdmin()
+    );
+  });
+
+  protected readonly isFinished = computed(() => {
+    const status = this.detail.hasValue() ? this.detail.value().status : null;
+    return status === 'Completed' || status === 'Closed';
+  });
 
   // One shared minute tick drives the countdown and the "breached" flip.
   protected readonly now = signal(Date.now());
@@ -110,10 +144,36 @@ export class WorkOrderDetailPage {
   protected readonly actionLabels = ACTION_LABELS;
   protected readonly priorityLabels = PRIORITY_LABELS;
   protected readonly statusLabels = STATUS_LABELS;
+  protected readonly reservationStatusLabels = RESERVATION_STATUS_LABELS;
 
   constructor() {
     const timer = setInterval(() => this.now.set(Date.now()), 60_000);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
+  }
+
+  protected async reservePart(): Promise<void> {
+    const reserved = await firstValueFrom(
+      this.dialog
+        .open<ReservePartDialog, ReservePartDialogData, boolean>(ReservePartDialog, {
+          data: { workOrderId: this.id() },
+        })
+        .afterClosed(),
+    );
+    if (reserved) {
+      this.partsError.set(null);
+      this.reservations.reload();
+    }
+  }
+
+  protected async release(reservation: ReservationItem): Promise<void> {
+    this.partsError.set(null);
+    try {
+      await this.inventory.release(reservation.id);
+    } catch (error) {
+      this.partsError.set(describeInventoryError(error));
+    } finally {
+      this.reservations.reload();
+    }
   }
 
   protected async run(action: WorkOrderAction): Promise<void> {

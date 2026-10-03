@@ -20,6 +20,12 @@ export const routes: Routes = [
       import('./features/work-orders/work-orders.routes').then((m) => m.WORK_ORDERS_ROUTES),
   },
   {
+    path: 'inventory',
+    canMatch: [authGuard],
+    loadChildren: () =>
+      import('./features/inventory/inventory.routes').then((m) => m.INVENTORY_ROUTES),
+  },
+  {
     path: '**',
     title: 'Page not found · PlantOps',
     loadComponent: () => import('./features/not-found/not-found.page').then((m) => m.NotFoundPage),

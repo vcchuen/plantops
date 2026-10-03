@@ -1,0 +1,104 @@
+<p><a routerLink="/inventory">&larr; Back to inventory</a></p>
+
+@if (part.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading part" />
+}
+
+@if (notFound()) {
+  <h1>Part not found</h1>
+  <p>No part with that id exists. <a routerLink="/inventory">Return to the inventory</a>.</p>
+} @else if (errorMessage(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else if (part.hasValue()) {
+  @let p = part.value();
+  <h1>{{ p.partNumber }} · {{ p.name }}</h1>
+
+  @if (p.isLowStock) {
+    <p class="banner" role="status">
+      <mat-icon aria-hidden="true">warning</mat-icon>
+      <span>Low stock: {{ p.quantityAvailable }} {{ p.unit }} available, reorder level is {{ p.reorderLevel }}.</span>
+    </p>
+  }
+
+  <dl>
+    <dt>Part number</dt>
+    <dd>{{ p.partNumber }}</dd>
+    <dt>Name</dt>
+    <dd>{{ p.name }}</dd>
+    <dt>Unit</dt>
+    <dd>{{ p.unit }}</dd>
+    <dt>Bin location</dt>
+    <dd>{{ p.binLocation || '—' }}</dd>
+    <dt>On hand</dt>
+    <dd>{{ p.quantityOnHand }}</dd>
+    <dt>Reserved</dt>
+    <dd>{{ p.quantityReserved }}</dd>
+    <dt>Available</dt>
+    <dd>{{ p.quantityAvailable }}</dd>
+    <dt>Reorder level</dt>
+    <dd>{{ p.reorderLevel }}</dd>
+  </dl>
+
+  @if (session.isSupervisorOrAdmin()) {
+    <h2>Receive stock</h2>
+    <form class="receive" novalidate (submit)="onReceive($event)">
+      <mat-form-field>
+        <mat-label>Quantity received</mat-label>
+        <input matInput type="number" step="1" [formField]="receiveForm.quantity" />
+        @for (error of receiveForm.quantity().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+      <button
+        mat-flat-button
+        type="submit"
+        [disabled]="receiveForm().invalid() || receiveForm().submitting()"
+      >
+        {{ receiveForm().submitting() ? 'Receiving…' : 'Receive stock' }}
+      </button>
+    </form>
+    <p class="visually-hidden" role="status" aria-live="polite">{{ receiveNotice() }}</p>
+    @if (receiveNotice()) {
+      <p class="notice" aria-hidden="true">
+        <mat-icon aria-hidden="true">check_circle</mat-icon>{{ receiveNotice() }}
+      </p>
+    }
+    @if (receiveError(); as message) {
+      <p class="error" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        {{ message }}
+      </p>
+    }
+  }
+
+  <h2>Active reservations</h2>
+  @if (p.reservations.length === 0) {
+    <p class="empty">No active reservations</p>
+  } @else {
+    <table aria-label="Active reservations">
+      <thead>
+        <tr>
+          <th scope="col">Work order</th>
+          <th scope="col" class="num">Quantity</th>
+          <th scope="col">Reserved by</th>
+          <th scope="col">Reserved at</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of p.reservations; track r.id) {
+          <tr>
+            <td>
+              <a [routerLink]="['/work-orders', r.workOrderId]">{{ r.workOrderNumber }}</a>
+            </td>
+            <td class="num">{{ r.quantity }} {{ p.unit }}</td>
+            <td>{{ r.reservedByName }}</td>
+            <td>{{ r.reservedAt | date: 'medium' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+}
