@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\PlantOps.SharedKernel\PlantOps.SharedKernel.csproj" />
     <ProjectReference Include="..\..\Assets\PlantOps.Modules.Assets.Contracts\PlantOps.Modules.Assets.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\PlantOps.Modules.Identity.Contracts\PlantOps.Modules.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Inventory\PlantOps.Modules.Inventory.Contracts\PlantOps.Modules.Inventory.Contracts.csproj" />
     <ProjectReference Include="..\PlantOps.Modules.WorkOrders.Contracts\PlantOps.Modules.WorkOrders.Contracts.csproj" />
   </ItemGroup>
 

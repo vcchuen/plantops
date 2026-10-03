@@ -14,6 +14,8 @@ internal sealed class WorkOrdersDbContext(DbContextOptions<WorkOrdersDbContext> 
 
     public DbSet<PmSchedule> PmSchedules => Set<PmSchedule>();
 
+    public DbSet<WorkOrderComment> WorkOrderComments => Set<WorkOrderComment>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<WorkOrderId>().HaveConversion<WorkOrderIdConverter>();
@@ -26,6 +28,7 @@ internal sealed class WorkOrdersDbContext(DbContextOptions<WorkOrdersDbContext> 
         modelBuilder.HasSequence<int>(NumberSequence, Schema);
         modelBuilder.ApplyConfiguration(new WorkOrderConfiguration());
         modelBuilder.ApplyConfiguration(new PmScheduleConfiguration());
+        modelBuilder.ApplyConfiguration(new WorkOrderCommentConfiguration());
         modelBuilder.ApplyAuditEntries();
         modelBuilder.ApplyOutbox();
     }
