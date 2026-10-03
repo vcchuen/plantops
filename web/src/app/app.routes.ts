@@ -32,6 +32,11 @@ export const routes: Routes = [
       import('./features/pm-schedules/pm-schedules.routes').then((m) => m.PM_SCHEDULES_ROUTES),
   },
   {
+    path: 'reports',
+    canMatch: [authGuard],
+    loadChildren: () => import('./features/reports/reports.routes').then((m) => m.REPORTS_ROUTES),
+  },
+  {
     path: '**',
     title: 'Page not found · PlantOps',
     loadComponent: () => import('./features/not-found/not-found.page').then((m) => m.NotFoundPage),

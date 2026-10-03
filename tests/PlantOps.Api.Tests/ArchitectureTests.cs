@@ -2,6 +2,7 @@ using System.Reflection;
 using PlantOps.Modules.Assets;
 using PlantOps.Modules.Identity;
 using PlantOps.Modules.Inventory;
+using PlantOps.Modules.Reporting;
 using PlantOps.Modules.WorkOrders;
 
 namespace PlantOps.Api.Tests;
@@ -18,6 +19,7 @@ public class ArchitectureTests
         typeof(AssetsModule).Assembly,
         typeof(WorkOrdersModule).Assembly,
         typeof(InventoryModule).Assembly,
+        typeof(ReportingModule).Assembly,
         typeof(IdentityModule).Assembly,
     ];
 

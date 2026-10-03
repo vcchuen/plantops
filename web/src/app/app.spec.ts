@@ -63,6 +63,20 @@ describe('App shell', () => {
     expect(header.textContent).not.toContain('Sign in');
   });
 
+  it.each([
+    ['supervisor', true],
+    ['admin', true],
+    ['technician', false],
+  ])('role %s sees the Reports nav link: %s', async (role, visible) => {
+    const el = await render(() => ({ body: { name: 'U', email: null, roles: [role] } }));
+    expect(el.querySelector('nav a[href="/reports"]') !== null).toBe(visible);
+  });
+
+  it('hides the Reports nav link when anonymous', async () => {
+    const el = await render(() => ({ body: null, status: 401 }));
+    expect(el.querySelector('nav a[href="/reports"]')).toBeNull();
+  });
+
   it('shows Sign in when anonymous and starts login', async () => {
     const el = await render(() => ({ body: null, status: 401 }));
     const button = [...el.querySelectorAll('header button')].find((b) =>

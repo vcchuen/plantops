@@ -90,6 +90,20 @@
         >
           PM schedules
         </a>
+        <!-- Hidden for others as a convenience only; the API enforces reports:view (403). -->
+        @if (session.isSupervisorOrAdmin()) {
+          <a
+            mat-list-item
+            routerLink="/reports"
+            routerLinkActive
+            #reports="routerLinkActive"
+            ariaCurrentWhenActive="page"
+            [activated]="reports.isActive"
+            (click)="isHandset() && drawer.close()"
+          >
+            Reports
+          </a>
+        }
       </mat-nav-list>
     </nav>
   </mat-sidenav>

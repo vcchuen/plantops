@@ -49,7 +49,9 @@ public static class IdentityModule
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
             .AddPolicy(Policies.ManageAssets, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin))
             .AddPolicy(Policies.SuperviseWorkOrders, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin))
-            .AddPolicy(Policies.ManageInventory, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin));
+            .AddPolicy(Policies.ManageInventory, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin))
+            .AddPolicy(Policies.ViewReports, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin))
+            .AddPolicy(Policies.RebuildReports, policy => policy.RequireRole(Roles.Admin));
 
         services.AddDbContext<IdentityDbContext>(options => options.UseSqlServer(
             configuration.GetConnectionString("PlantOps"),

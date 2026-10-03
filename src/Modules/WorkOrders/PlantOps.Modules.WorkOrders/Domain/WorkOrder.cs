@@ -314,7 +314,10 @@ internal sealed class WorkOrder : AggregateRoot
             now,
             // Whoever completes it, the job belongs to the assigned technician (an admin may complete on their behalf).
             AssignedToName ?? actor.Name,
-            AssetDown));
+            AssetDown,
+            Priority,
+            Source,
+            DueAt));
     }
 
     public void Close(Actor actor, DateTimeOffset now)

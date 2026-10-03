@@ -14,13 +14,20 @@
     <Project Path="src/Modules/Identity/PlantOps.Modules.Identity/PlantOps.Modules.Identity.csproj" />
     <Project Path="src/Modules/Inventory/PlantOps.Modules.Inventory.Contracts/PlantOps.Modules.Inventory.Contracts.csproj" />
     <Project Path="src/Modules/Inventory/PlantOps.Modules.Inventory/PlantOps.Modules.Inventory.csproj" />
+    <Project Path="src/Modules/Reporting/PlantOps.Modules.Reporting.Contracts/PlantOps.Modules.Reporting.Contracts.csproj" />
+    <Project Path="src/Modules/Reporting/PlantOps.Modules.Reporting/PlantOps.Modules.Reporting.csproj" />
     <Project Path="src/Modules/WorkOrders/PlantOps.Modules.WorkOrders.Contracts/PlantOps.Modules.WorkOrders.Contracts.csproj" />
     <Project Path="src/Modules/WorkOrders/PlantOps.Modules.WorkOrders/PlantOps.Modules.WorkOrders.csproj" />
+  </Folder>
+  <Folder Name="/perf/">
+    <Project Path="perf/PlantOps.Perf/PlantOps.Perf.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PlantOps.Api.Tests/PlantOps.Api.Tests.csproj" />
     <Project Path="tests/PlantOps.Modules.Assets.Tests/PlantOps.Modules.Assets.Tests.csproj" />
     <Project Path="tests/PlantOps.Modules.Inventory.Tests/PlantOps.Modules.Inventory.Tests.csproj" />
+    <Project Path="tests/PlantOps.Modules.Reporting.Tests/PlantOps.Modules.Reporting.Tests.csproj" />
     <Project Path="tests/PlantOps.Modules.WorkOrders.Tests/PlantOps.Modules.WorkOrders.Tests.csproj" />
+    <Project Path="tests/PlantOps.Perf.Tests/PlantOps.Perf.Tests.csproj" />
   </Folder>
 </Solution>

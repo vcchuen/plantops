@@ -36,7 +36,11 @@ internal sealed record WorkOrderCompleted(
     DateTimeOffset StartedAt,
     DateTimeOffset CompletedAt,
     string TechnicianName,
-    bool AssetDown) : IDomainEvent;
+    bool AssetDown,
+    // Appended for the Reporting read model (design 07). Older audit payloads simply lack these.
+    WorkOrderPriority Priority,
+    WorkOrderSource Source,
+    DateTimeOffset DueAt) : IDomainEvent;
 
 // Carries everything its integration event needs (see the note above): the notifier must not call back into WorkOrders.
 internal sealed record WorkOrderSlaBreached(

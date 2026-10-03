@@ -1,0 +1,33 @@
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.export {
+  color: var(--mat-sys-primary);
+  font-weight: 500;
+
+  &.disabled {
+    color: var(--mat-sys-on-surface-variant);
+    opacity: 0.6;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+}
+
+.range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.hint {
+  color: var(--mat-sys-error);
+}
+
+.cards {
+  display: grid;
+  gap: 16px;
+}

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- xUnit v3 test projects are executables; the runner starts them directly. -->
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Linked rather than moved into a third test-utils project, like the other test projects do.
+         The whole-app fixture is the Inventory one: it already boots the Api host over one SQL Server container, seeds
+         the identity directory and drains the WorkOrders outbox, which is exactly what the report tests need.
+         Linking costs nothing but its name (it says "Inventory"); copying ~120 lines would let the two drift. -->
+    <Compile Include="..\PlantOps.Api.Tests\Support\TestAuth.cs" Link="Support\TestAuth.cs" />
+    <Compile Include="..\PlantOps.Modules.Assets.Tests\Integration\IntegrationFactAttribute.cs" Link="Support\IntegrationFactAttribute.cs" />
+    <Compile Include="..\PlantOps.Modules.Inventory.Tests\Integration\InventoryFixture.cs" Link="Support\InventoryFixture.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Api project brings every module in transitively; the modules expose their internals to this assembly. -->
+    <ProjectReference Include="..\..\src\Host\PlantOps.Api\PlantOps.Api.csproj" />
+  </ItemGroup>
+
+</Project>

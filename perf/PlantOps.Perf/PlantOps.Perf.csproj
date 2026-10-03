@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Testcontainers.MsSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A host like the Api: it may reference module implementations (the architecture test only polices the modules). -->
+    <ProjectReference Include="..\..\src\BuildingBlocks\PlantOps.BuildingBlocks.Infrastructure\PlantOps.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Assets\PlantOps.Modules.Assets\PlantOps.Modules.Assets.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Reporting\PlantOps.Modules.Reporting\PlantOps.Modules.Reporting.csproj" />
+    <ProjectReference Include="..\..\src\Modules\WorkOrders\PlantOps.Modules.WorkOrders\PlantOps.Modules.WorkOrders.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PlantOps.Perf.Tests" />
+  </ItemGroup>
+
+</Project>

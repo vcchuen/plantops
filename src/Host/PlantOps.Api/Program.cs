@@ -5,6 +5,7 @@ using PlantOps.Api.Http;
 using PlantOps.Modules.Assets;
 using PlantOps.Modules.Identity;
 using PlantOps.Modules.Inventory;
+using PlantOps.Modules.Reporting;
 using PlantOps.Modules.WorkOrders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,7 @@ builder.Services
     .AddAssetsModule(builder.Configuration)
     .AddWorkOrdersModule(builder.Configuration)
     .AddInventoryModule(builder.Configuration)
+    .AddReportingModule(builder.Configuration)
     .AddIdentityModule(builder.Configuration);
 
 var app = builder.Build();
@@ -54,6 +56,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 app.MapAssetsEndpoints()
     .MapWorkOrdersEndpoints()
     .MapInventoryEndpoints()
+    .MapReportingEndpoints()
     .MapIdentityEndpoints();
 
 // The SPA fallback must not swallow /api: an unknown API path is a 404 problem, never index.html with 200.

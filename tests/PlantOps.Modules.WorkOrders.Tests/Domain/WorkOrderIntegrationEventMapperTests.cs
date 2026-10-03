@@ -31,6 +31,26 @@ public class WorkOrderIntegrationEventMapperTests
         Assert.Equal(WorkOrderBuilder.T0.AddMinutes(90), mapped.CompletedAt);
         Assert.Equal("Tom", mapped.TechnicianName);
         Assert.True(mapped.AssetDown);
+        // Appended for Reporting (design 07): names, not enums, and the deadline in force at completion.
+        Assert.Equal("P2", mapped.Priority);
+        Assert.Equal("Reactive", mapped.Source);
+        Assert.Equal(w.DueAt, mapped.DueAt);
+    }
+
+    [Fact]
+    public void A_priority_changed_at_approval_is_the_priority_in_the_completed_event()
+    {
+        var w = WorkOrderBuilder.Submitted(WorkOrderPriority.P4);
+        w.Approve(WorkOrderBuilder.Sam, WorkOrderBuilder.T0.AddMinutes(5), WorkOrderPriority.P1);
+        w.Assign(WorkOrderBuilder.Sam, WorkOrderBuilder.Tom, WorkOrderBuilder.T0.AddMinutes(10));
+        w.Start(WorkOrderBuilder.Tom, WorkOrderBuilder.T0.AddMinutes(20));
+        w.ClearDomainEvents();
+
+        w.Complete(WorkOrderBuilder.Tom, WorkOrderBuilder.T0.AddMinutes(60), "Done.");
+
+        var mapped = Assert.IsType<WorkOrderCompletedIntegrationEvent>(Mapper.Map(Assert.Single(w.DomainEvents)));
+        Assert.Equal("P1", mapped.Priority);
+        Assert.Equal(WorkOrderBuilder.T0.AddHours(4), mapped.DueAt);
     }
 
     [Fact]

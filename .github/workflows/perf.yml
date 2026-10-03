@@ -1,0 +1,37 @@
+name: perf
+
+# Not part of ci.yml: it pulls a SQL Server image and runs for minutes. It runs when someone asks (workflow_dispatch)
+# and when the harness itself changes. Numbers from shared runners are noisy: compare ratios within one run only.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'perf/**'
+      - '.github/workflows/perf.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # Actions are pinned to commit SHAs: a tag can be re-pointed by whoever controls the repo.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      # Release: BenchmarkDotNet (experiment 3) refuses to be meaningful in Debug.
+      - run: dotnet run -c Release --project perf/PlantOps.Perf -- perf-results.md
+      # Also on failure: a half-finished report (each experiment is isolated) is what you need to fix the next run.
+      - name: Show results on the run page
+        if: always()
+        run: |
+          if [ -f perf-results.md ]; then cat perf-results.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: perf-results
+          path: perf-results.md
+          if-no-files-found: warn
