@@ -52,6 +52,9 @@ public class DemoSeedIntegrationTests
         {
             builder.UseSetting("ConnectionStrings:PlantOps", connectionString);
             builder.UseSetting("Database:ApplyMigrationsOnStartup", "true");
+            // One test user fires hundreds of requests a second; the production limit would answer 429.
+            builder.UseSetting("RateLimiting:Api:TokenLimit", "1000000");
+            builder.UseSetting("RateLimiting:Api:TokensPerPeriod", "1000000");
             builder.UseSetting(DemoSeeder.ConfigurationKey, "true");
             // Delivery happens only when the test drains the outbox, so before and after are deterministic.
             builder.UseSetting("Outbox:PollInterval", "01:00:00");

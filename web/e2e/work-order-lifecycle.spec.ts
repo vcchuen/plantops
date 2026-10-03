@@ -42,7 +42,8 @@ test('work order lifecycle across operator, supervisor and technician; stock dro
     await page.getByRole('button', { name: 'Reserve part' }).click();
 
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Part', { exact: true }).fill(PART_NUMBER);
+    // Role, not label: Material labels the autocomplete's listbox panel with the same text as its input.
+    await dialog.getByRole('combobox', { name: 'Part', exact: true }).fill(PART_NUMBER);
     await page.getByRole('option', { name: new RegExp(PART_NUMBER) }).click();
     await dialog.getByLabel('Quantity').fill('2');
     await dialog.getByRole('button', { name: 'Reserve', exact: true }).click();

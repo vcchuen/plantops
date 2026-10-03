@@ -61,7 +61,8 @@ export async function raiseWorkOrder(page: Page, title: string): Promise<string>
   await expect(page.getByRole('heading', { name: 'Raise work order' })).toBeVisible();
 
   // The asset is only accepted when picked from the autocomplete list (typing alone is invalid).
-  await page.getByLabel('Asset', { exact: true }).fill(ASSET_TAG);
+  // Role, not label: Material labels the autocomplete's listbox panel with the same text as its input.
+  await page.getByRole('combobox', { name: 'Asset', exact: true }).fill(ASSET_TAG);
   await page.getByRole('option', { name: new RegExp(ASSET_TAG) }).click();
 
   await page.getByLabel('Title', { exact: true }).fill(title);

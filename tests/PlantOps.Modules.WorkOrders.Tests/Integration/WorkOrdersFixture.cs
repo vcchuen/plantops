@@ -40,6 +40,9 @@ public sealed class WorkOrdersFixture : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:PlantOps", connectionString);
             // The hosted services migrate Assets, WorkOrders and Identity while the host starts.
             builder.UseSetting("Database:ApplyMigrationsOnStartup", "true");
+            // One test user fires hundreds of requests a second; the production limit would answer 429.
+            builder.UseSetting("RateLimiting:Api:TokenLimit", "1000000");
+            builder.UseSetting("RateLimiting:Api:TokensPerPeriod", "1000000");
             builder.ConfigureTestServices(services => services.AddTestAuthentication());
         });
 
