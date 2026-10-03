@@ -1,7 +1,10 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using PlantOps.Api.Health;
 using PlantOps.Api.Http;
+using PlantOps.Api.Security;
+using PlantOps.Api.Seeding;
 using PlantOps.Modules.Assets;
 using PlantOps.Modules.Identity;
 using PlantOps.Modules.Inventory;
@@ -24,8 +27,39 @@ builder.Services
     .AddReportingModule(builder.Configuration)
     .AddIdentityModule(builder.Configuration);
 
+// Registered after the modules on purpose: hosted services start in registration order, so every module's
+// migrations have run before the demo seed (Seed:Demo=true) looks at the database.
+builder.Services.AddDemoSeed();
+builder.Services.AddPlantOpsRateLimiting();
+
+// Read when the options are first used, not now, so settings added after registration (tests) are honoured.
+builder.Services.AddOptions<ForwardedHeadersOptions>().Configure<IConfiguration>((options, configuration) =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    // Azure App Service terminates TLS in its front end and calls us over plain HTTP from addresses we cannot list, so
+    // without X-Forwarded-Proto the app believes the request is http (the Secure __Host- cookie, the OIDC redirect URI
+    // and HSTS would all go wrong) and without X-Forwarded-For every client looks like the front end (the login rate
+    // limit would be one shared bucket). The default only trusts loopback proxies, so the platform must opt in: ONLY
+    // when ForwardedHeaders:TrustAll=true, which the App Service deployment sets and nothing else does. Trusting these
+    // headers from anyone would let a client forge its IP and scheme, so the default stays closed.
+    if (configuration.GetValue<bool>("ForwardedHeaders:TrustAll"))
+    {
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    }
+});
+
 var app = builder.Build();
 
+// First: everything after it (rate limiting, HTTPS-aware cookies, logging) must see the real client address and scheme.
+app.UseForwardedHeaders();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
@@ -34,7 +68,9 @@ app.UseStatusCodePages();
 // Before authentication so the SPA's files stay anonymous without per-file endpoint metadata.
 app.UseDefaultFiles();
 app.UseStaticFiles();
-app.UseIdentityModule();
+// The rate limiter sits between authentication and authorization: it needs the user to partition by, and it must also
+// count the requests that authorization is about to answer with 401/403.
+app.UseIdentityModule(pipeline => pipeline.UseRateLimiter());
 
 if (app.Environment.IsDevelopment())
 {

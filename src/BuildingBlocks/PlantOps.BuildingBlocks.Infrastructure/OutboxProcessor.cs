@@ -16,10 +16,13 @@ internal sealed class OutboxProcessor<TContext>(
     IServiceScopeFactory scopes,
     IntegrationEventRegistry registry,
     TimeProvider time,
-    ILogger<OutboxProcessor<TContext>> logger) : IOutboxProcessor<TContext>
+    ILogger<OutboxProcessor<TContext>> logger,
+    ILoggerFactory loggers) : IOutboxProcessor<TContext>
     where TContext : DbContext
 {
     public const int BatchSize = 20;
+
+    private readonly ILogger _securityLogger = loggers.CreateLogger(SecurityEvents.Category);
 
     public async Task<int> ProcessOnceAsync(CancellationToken cancellationToken = default)
     {
@@ -80,6 +83,8 @@ internal sealed class OutboxProcessor<TContext>(
             {
                 // Parked, not deleted: the row stays unprocessed (with LastError) for an operator to inspect.
                 logger.LogError(ex, "Outbox message {MessageId} ({Type}) parked after {Attempts} failed attempts", message.Id, message.Type, message.Attempts);
+                // Same fact under the fixed security EventId (1006) so an alert rule can key on it; no exception text here.
+                SecurityEvents.OutboxMessageParked(_securityLogger, message.Id, message.Type);
             }
             else
             {

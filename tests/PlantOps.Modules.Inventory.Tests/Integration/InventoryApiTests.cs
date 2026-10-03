@@ -152,8 +152,9 @@ public class InventoryApiTests(InventoryFixture fixture)
 
     private static async Task<JsonElement[]> ReservationsFor(HttpClient client, Guid workOrderId)
     {
-        var page = await client.GetFromJsonAsync<JsonElement>($"/api/inventory/reservations?workOrderId={workOrderId}", Ct);
-        return [.. page.GetProperty("items").EnumerateArray()];
+        var list = await client.GetFromJsonAsync<JsonElement>($"/api/inventory/reservations?workOrderId={workOrderId}", Ct);
+        Assert.Equal(JsonValueKind.Array, list.ValueKind);
+        return [.. list.EnumerateArray()];
     }
 
     // ---- parts ----

@@ -22,6 +22,16 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet restore PlantOps.slnx
+      # Supply chain (OWASP A03:2025): fail on any known-vulnerable NuGet package, direct or transitive.
+      # `dotnet list package` exits 0 even when it finds some, so the output is what gets checked.
+      - name: Fail on vulnerable NuGet packages
+        shell: bash
+        run: |
+          dotnet list PlantOps.slnx package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
+          if grep -q "has the following vulnerable packages" vulnerable.txt; then
+            echo "::error::Vulnerable NuGet packages found (see the list above). Upgrade them in Directory.Packages.props."
+            exit 1
+          fi
       - run: dotnet format PlantOps.slnx --verify-no-changes --no-restore
       - run: dotnet build PlantOps.slnx -c Release --no-restore
       # Integration tests skip locally unless opted in (no DB on dev laptops yet); CI always runs them.
@@ -42,6 +52,8 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      # Production dependencies only: dev tooling advisories do not ship to users, but a high one in what we serve does.
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
       # Run the suite on both sides of UTC. Date bugs are directional: parsing "2026-10-20" as UTC midnight shows
       # the previous day west of UTC, while formatting a local date in UTC shows the previous day east of it

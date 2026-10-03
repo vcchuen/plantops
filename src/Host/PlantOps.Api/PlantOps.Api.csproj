@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="PlantOps.Api.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\BuildingBlocks\PlantOps.SharedKernel\PlantOps.SharedKernel.csproj" />
     <ProjectReference Include="..\..\Modules\Assets\PlantOps.Modules.Assets\PlantOps.Modules.Assets.csproj" />
     <ProjectReference Include="..\..\Modules\WorkOrders\PlantOps.Modules.WorkOrders\PlantOps.Modules.WorkOrders.csproj" />

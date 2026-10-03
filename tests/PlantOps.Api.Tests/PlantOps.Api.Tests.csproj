@@ -9,12 +9,18 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.MsSql" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Linked rather than moved into a test-utils project, like the other test projects do. -->
+    <Compile Include="..\PlantOps.Modules.Assets.Tests\Integration\IntegrationFactAttribute.cs" Link="Support\IntegrationFactAttribute.cs" />
   </ItemGroup>
 
   <ItemGroup>

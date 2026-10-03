@@ -1,9 +1,12 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using PlantOps.BuildingBlocks.Infrastructure;
 
 namespace PlantOps.Modules.Identity;
 
@@ -72,9 +75,31 @@ internal sealed class OidcOptionsSetup(IOptions<AuthOptions> auth) : IConfigureN
         // userinfo endpoint and runs the claim actions that add "roles" and "email" (verified in OpenIdConnectHandler:
         // RunTokenValidatedEventAsync precedes GetUserInformationAsync). Only the ticket event, raised after the whole
         // remote flow and before the cookie is issued, sees the final principal.
-        options.Events.OnTicketReceived = context => context.HttpContext.RequestServices
-            .GetRequiredService<UserProvisioner>()
-            .UpsertAsync(context.Principal, context.HttpContext.RequestAborted);
+        options.Events.OnTicketReceived = async context =>
+        {
+            var services = context.HttpContext.RequestServices;
+            await services.GetRequiredService<UserProvisioner>()
+                .UpsertAsync(context.Principal, context.HttpContext.RequestAborted);
+
+            // Only the subject id is logged: no name, email or token (security event 1001).
+            if (context.Principal?.FindFirstValue(Claims.Subject) is { Length: > 0 } subject)
+            {
+                SecurityEvents.SignInSucceeded(SecurityLogger(services), subject);
+            }
+        };
+
+        // Neither handler marks the failure as handled: the framework's default response stays as it was, we only
+        // make the failure visible. The reason is the exception type, never its message (it can echo IdP output).
+        options.Events.OnRemoteFailure = context =>
+        {
+            SecurityEvents.SignInFailed(SecurityLogger(context.HttpContext.RequestServices), FailureReason(context.Failure));
+            return Task.CompletedTask;
+        };
+        options.Events.OnAuthenticationFailed = context =>
+        {
+            SecurityEvents.SignInFailed(SecurityLogger(context.HttpContext.RequestServices), FailureReason(context.Exception));
+            return Task.CompletedTask;
+        };
 
         options.Events.OnRedirectToIdentityProvider = context =>
         {
@@ -90,4 +115,9 @@ internal sealed class OidcOptionsSetup(IOptions<AuthOptions> auth) : IConfigureN
             return Task.CompletedTask;
         };
     }
+
+    internal static ILogger SecurityLogger(IServiceProvider services) =>
+        services.GetRequiredService<ILoggerFactory>().CreateLogger(SecurityEvents.Category);
+
+    private static string FailureReason(Exception? failure) => failure?.GetType().Name ?? "Unknown";
 }
