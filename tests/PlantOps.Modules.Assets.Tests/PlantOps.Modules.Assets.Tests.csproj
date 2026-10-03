@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\PlantOps.Api.Tests\Support\TestAuth.cs" Link="Support\TestAuth.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The Api project brings the Assets module in transitively; the module exposes its internals to this assembly. -->
     <ProjectReference Include="..\..\src\Host\PlantOps.Api\PlantOps.Api.csproj" />
   </ItemGroup>

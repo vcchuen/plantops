@@ -3,6 +3,9 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using PlantOps.Modules.Identity.Contracts;
 
 namespace PlantOps.Api.Tests;
 
@@ -74,8 +77,8 @@ public class HostTests
     [Fact]
     public async Task Unbindable_query_value_returns_400_problem_not_500()
     {
-        await using var factory = CreateFactory();
-        using var client = factory.CreateClient();
+        await using var factory = CreateFactory().WithWebHostBuilder(b => b.ConfigureTestServices(s => s.AddTestAuthentication()));
+        using var client = factory.CreateClient().AsUser("Sam", Roles.Supervisor);
 
         var response = await client.GetAsync("/api/assets?criticality=Z", TestContext.Current.CancellationToken);
 
