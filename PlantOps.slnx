@@ -4,6 +4,9 @@
     <Project Path="src/BuildingBlocks/PlantOps.BuildingBlocks.Infrastructure/PlantOps.BuildingBlocks.Infrastructure.csproj" />
     <Project Path="src/BuildingBlocks/PlantOps.SharedKernel/PlantOps.SharedKernel.csproj" />
   </Folder>
+  <Folder Name="/src/Functions/">
+    <Project Path="src/Functions/PlantOps.Functions/PlantOps.Functions.csproj" />
+  </Folder>
   <Folder Name="/src/Host/">
     <Project Path="src/Modules/Assets/PlantOps.Modules.Assets.Contracts/PlantOps.Modules.Assets.Contracts.csproj" />
     <Project Path="src/Modules/Assets/PlantOps.Modules.Assets/PlantOps.Modules.Assets.csproj" />
