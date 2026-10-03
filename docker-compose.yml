@@ -67,7 +67,7 @@ services:
       ServiceBus__ConnectionString: ${SERVICEBUS_CONNECTION_STRING:-}
       ServiceBus__SlaBreachQueue: sla-breaches
 
-  # Service Bus emulator for local SLA breach messaging (Decision 2 in ADR-0006).
+  # Service Bus emulator for local SLA breach messaging (docs/design/06, Decision 2).
   # Why optional? The API logs SLA breaches when Service Bus is not configured; the queue decouples
   # escalation detection (API) from notification delivery (Azure Function). Enable with: docker compose --profile messaging up
   servicebus:
