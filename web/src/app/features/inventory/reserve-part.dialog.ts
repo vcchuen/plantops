@@ -46,7 +46,10 @@ export interface ReservePartDialogData {
             (focus)="onPartFocus()"
             (blur)="reserveForm.partId().markAsTouched()"
           />
-          <mat-autocomplete #partAuto="matAutocomplete" (optionSelected)="pickPart($event.option.value)">
+          <mat-autocomplete
+            #partAuto="matAutocomplete"
+            (optionSelected)="pickPart($event.option.value)"
+          >
             @for (part of partOptions(); track part.id) {
               <mat-option [value]="part">{{ partLabel(part) }}</mat-option>
             }

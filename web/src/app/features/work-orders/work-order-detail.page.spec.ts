@@ -83,7 +83,9 @@ describe('WorkOrderDetailPage', () => {
   }
 
   const reservationsReq = () =>
-    http.expectOne((r) => r.url === '/api/inventory/reservations' && r.params.get('workOrderId') === 'w1');
+    http.expectOne(
+      (r) => r.url === '/api/inventory/reservations' && r.params.get('workOrderId') === 'w1',
+    );
 
   function load(
     body: WorkOrderDetail = detail(),

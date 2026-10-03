@@ -40,7 +40,8 @@ describe('PartDetailPage', () => {
 
   const url = '/api/inventory/parts/p1';
   const settle = () => new Promise<void>((resolve) => setTimeout(resolve));
-  const submitBtn = () => el.querySelector('form.receive button[type="submit"]') as HTMLButtonElement;
+  const submitBtn = () =>
+    el.querySelector('form.receive button[type="submit"]') as HTMLButtonElement;
   const qty = () => el.querySelector('form.receive input') as HTMLInputElement;
 
   function type(value: string) {

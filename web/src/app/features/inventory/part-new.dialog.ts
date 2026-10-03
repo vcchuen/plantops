@@ -1,5 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormField, form, maxLength, min, required, submit, validate } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  maxLength,
+  min,
+  required,
+  submit,
+  validate,
+} from '@angular/forms/signals';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';

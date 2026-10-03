@@ -85,9 +85,7 @@ describe('PartsListPage', () => {
 
   it('renders rows with a link to the part and the low stock status as icon plus text', async () => {
     create();
-    listReq().flush(
-      pageOf([part(), part({ id: 'p2', partNumber: 'NZL-001', isLowStock: true })]),
-    );
+    listReq().flush(pageOf([part(), part({ id: 'p2', partNumber: 'NZL-001', isLowStock: true })]));
     await fixture.whenStable();
 
     expect(el.querySelectorAll('tr[mat-row]').length).toBe(2);
