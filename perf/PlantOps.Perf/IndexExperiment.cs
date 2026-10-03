@@ -108,6 +108,8 @@ internal static class IndexExperiment
         var results = new List<IndexMeasurement>();
         try
         {
+            // The index the model now ships (migration AddFactsCompletedAtCoveringIndex, adopted from this experiment)
+            // has the candidate's name, so this drop also removes it: "no index" stays a true baseline.
             await DropIndexesAsync(database, variants);
             await MeasureAllAsync(database, queries, captured, "no index", results);
 
