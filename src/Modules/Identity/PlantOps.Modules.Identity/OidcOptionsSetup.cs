@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -62,8 +63,9 @@ internal sealed class OidcOptionsSetup(IOptions<AuthOptions> auth) : IConfigureN
         options.TokenValidationParameters.NameClaimType = "name";
         options.TokenValidationParameters.RoleClaimType = Claims.Roles;
 
-        // The default ClaimActions don't know "roles", and the built-in MapJsonKey does not split arrays.
-        options.ClaimActions.Add(new JsonArrayClaimAction(Claims.Roles, Claims.Roles));
+        // The default ClaimActions don't know "roles". MapJsonKey emits one claim per array element;
+        // MapUniqueJsonKey would NOT (it stores the raw '["a","b"]' text as one claim, so IsInRole fails).
+        options.ClaimActions.MapJsonKey(Claims.Roles, Claims.Roles);
 
         options.Events.OnRedirectToIdentityProvider = context =>
         {

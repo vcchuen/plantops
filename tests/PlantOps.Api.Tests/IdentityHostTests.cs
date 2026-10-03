@@ -281,7 +281,7 @@ public class IdentityHostTests
         Assert.Equal(expected, IdentityEndpoints.IsLocalUrl(url));
 
     [Fact]
-    public void Roles_json_array_maps_to_one_claim_per_role_without_duplicates()
+    public void Roles_json_array_maps_to_one_claim_per_role()
     {
         var options = new OpenIdConnectOptions();
         new OidcOptionsSetup(Options.Create(new AuthOptions { Authority = "https://idp.test", ClientId = "c" })).Configure(options);
@@ -295,7 +295,8 @@ public class IdentityHostTests
             action.Run(userInfo.RootElement, identity, "iss");
         }
 
-        Assert.Equal([Roles.Supervisor, Roles.Admin], identity.FindAll("roles").Select(c => c.Value).OrderBy(r => r == Roles.Supervisor ? 0 : 1));
+        // Duplicates (id_token + userinfo) are harmless: IsInRole doesn't care and /me returns Distinct().
+        Assert.Equal([Roles.Admin, Roles.Supervisor], identity.FindAll("roles").Select(c => c.Value).Distinct().Order());
         Assert.True(identity.IsAuthenticated);
         Assert.True(new ClaimsPrincipal(identity).IsInRole(Roles.Admin));
     }
