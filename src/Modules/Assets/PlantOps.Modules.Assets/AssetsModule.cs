@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PlantOps.BuildingBlocks.Infrastructure;
+using PlantOps.Modules.Assets.Contracts;
 using PlantOps.Modules.Assets.Endpoints;
 using PlantOps.Modules.Assets.Infrastructure;
 
@@ -16,18 +18,22 @@ public static class AssetsModule
     {
         // The connection string is read inside the callback, i.e. when a context is first resolved, not here:
         // configuration added after service registration (tests, user-secrets) must still be honoured.
-        services.AddDbContext<AssetsDbContext>(options => options.UseSqlServer(
-            configuration.GetConnectionString("PlantOps"),
-            sql =>
-            {
-                sql.MigrationsHistoryTable("__EFMigrationsHistory", AssetsDbContext.Schema);
-                // Azure SQL drops connections during failovers and throttling; these faults are transient and
-                // safe to retry for the single-SaveChanges units of work used here.
-                sql.EnableRetryOnFailure();
-            }));
+        services.AddDomainEventAuditing();
+        services.AddDbContext<AssetsDbContext>((sp, options) => options
+            .UseSqlServer(
+                configuration.GetConnectionString("PlantOps"),
+                sql =>
+                {
+                    sql.MigrationsHistoryTable("__EFMigrationsHistory", AssetsDbContext.Schema);
+                    // Azure SQL drops connections during failovers and throttling; these faults are transient and
+                    // safe to retry for the single-SaveChanges units of work used here.
+                    sql.EnableRetryOnFailure();
+                })
+            .AddInterceptors(sp.GetRequiredService<DomainEventInterceptor>()));
 
         services.TryAddSingleton(TimeProvider.System);
-        services.AddHostedService<AssetsMigrationService>();
+        services.AddScoped<IAssetDirectory, AssetDirectory>();
+        services.AddMigrateOnStartup<AssetsDbContext>();
         services.AddHealthChecks().AddDbContextCheck<AssetsDbContext>("assets-db", tags: ["ready"]);
         return services;
     }

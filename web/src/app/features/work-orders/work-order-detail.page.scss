@@ -1,0 +1,46 @@
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+}
+
+dt {
+  font-weight: 500;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+dd {
+  margin: 0;
+}
+
+.multiline {
+  white-space: pre-line;
+}
+
+.sla-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mat-sys-error);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

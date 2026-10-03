@@ -56,14 +56,14 @@ app.MapAssetsEndpoints()
     .MapInventoryEndpoints()
     .MapIdentityEndpoints();
 
-// Unknown API routes must 404 as problem+json instead of falling through to the SPA's index.html.
-// Specific routes beat this catch-all because it contains a catch-all parameter.
-// Anonymous on purpose: the fallback policy would otherwise answer 401 and hide the 404 (and nothing leaks:
-// every real route is still protected).
-app.Map("/api/{**rest}", () => TypedResults.Problem(statusCode: StatusCodes.Status404NotFound)).AllowAnonymous();
-
+// The SPA fallback must not swallow /api: an unknown API path is a 404 problem, never index.html with 200.
+// /api is excluded from the fallback route rather than answered by an "/api/{**rest}" catch-all: a catch-all is
+// itself a candidate endpoint and masked the real answer (a JSON endpoint called without a body came back as a
+// misleading 404 instead of the endpoint's 400). With no endpoint matched: anonymous callers get 401 (the
+// fallback policy also covers "no endpoint", so route existence is not probeable anonymously) and signed-in
+// callers get routing's 404, turned into problem+json by UseStatusCodePages.
 // The SPA's own files are public; the API behind them is what needs a session.
-app.MapFallbackToFile("index.html").AllowAnonymous();
+app.MapFallbackToFile("{*path:nonfile:regex(^(?!api(/|$)))}", "index.html").AllowAnonymous();
 
 app.Run();
 

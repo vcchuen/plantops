@@ -191,11 +191,35 @@ public class IdentityHostTests
         using var client = factory.CreateClient().AsUser("Sam", Roles.Supervisor).WithCsrf();
 
         // The handler rejects the empty payload before it reaches the database; getting past 401/403 is the point.
-        // (A body-less POST would 404 instead: the endpoint requires a JSON content type, so routing skips it.)
         var response = await client.PostAsJsonAsync("/api/assets", new { }, Ct);
 
         Assert.NotEqual(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Body_less_post_to_a_json_endpoint_reaches_the_endpoint_and_is_400_not_a_masked_404()
+    {
+        await using var factory = CreateTestAuthFactory();
+        using var client = factory.CreateClient().AsUser("Sam", Roles.Supervisor).WithCsrf();
+
+        var response = await client.PostAsync("/api/assets", content: null, Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Unknown_api_route_is_401_when_anonymous_and_404_problem_when_signed_in()
+    {
+        await using var factory = CreateTestAuthFactory();
+        using var anonymous = factory.CreateClient();
+        using var signedIn = factory.CreateClient().AsUser("Sam", Roles.Supervisor);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/does-not-exist", Ct)).StatusCode);
+        var response = await signedIn.GetAsync("/api/does-not-exist", Ct);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]

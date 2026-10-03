@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/PlantOps.BuildingBlocks.Infrastructure/PlantOps.BuildingBlocks.Infrastructure.csproj" />
     <Project Path="src/BuildingBlocks/PlantOps.SharedKernel/PlantOps.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/src/Host/">
@@ -16,5 +17,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/PlantOps.Api.Tests/PlantOps.Api.Tests.csproj" />
     <Project Path="tests/PlantOps.Modules.Assets.Tests/PlantOps.Modules.Assets.Tests.csproj" />
+    <Project Path="tests/PlantOps.Modules.WorkOrders.Tests/PlantOps.Modules.WorkOrders.Tests.csproj" />
   </Folder>
 </Solution>

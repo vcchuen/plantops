@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
@@ -66,6 +67,14 @@ internal sealed class OidcOptionsSetup(IOptions<AuthOptions> auth) : IConfigureN
         // The default ClaimActions don't know "roles". MapJsonKey emits one claim per array element;
         // MapUniqueJsonKey would NOT (it stores the raw '["a","b"]' text as one claim, so IsInRole fails).
         options.ClaimActions.MapJsonKey(Claims.Roles, Claims.Roles);
+
+        // OnTicketReceived, not OnTokenValidated: the handler validates the id_token (OnTokenValidated), THEN fetches the
+        // userinfo endpoint and runs the claim actions that add "roles" and "email" (verified in OpenIdConnectHandler:
+        // RunTokenValidatedEventAsync precedes GetUserInformationAsync). Only the ticket event, raised after the whole
+        // remote flow and before the cookie is issued, sees the final principal.
+        options.Events.OnTicketReceived = context => context.HttpContext.RequestServices
+            .GetRequiredService<UserProvisioner>()
+            .UpsertAsync(context.Principal, context.HttpContext.RequestAborted);
 
         options.Events.OnRedirectToIdentityProvider = context =>
         {

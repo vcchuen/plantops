@@ -2,7 +2,7 @@ using PlantOps.SharedKernel;
 
 namespace PlantOps.Modules.Assets.Domain;
 
-internal sealed class Asset
+internal sealed class Asset : AggregateRoot
 {
     public const int NameMaxLength = 100;
     public const int ManufacturerMaxLength = 100;
@@ -16,6 +16,8 @@ internal sealed class Asset
     }
 
     public AssetId Id { get; private set; }
+
+    public override string AggregateId => Id.Value.ToString();
 
     // The mapped column is the raw string, with the AssetTag exposed on top. A value converter would hide the
     // string from EF, so a prefix search could only translate as CAST(Tag AS nvarchar(max)) LIKE ... (no index
@@ -68,7 +70,7 @@ internal sealed class Asset
         ArgumentNullException.ThrowIfNull(location);
         EnsureDefined(criticality);
 
-        return new Asset
+        var asset = new Asset
         {
             Id = AssetId.New(),
             _tag = tag.Value,
@@ -82,6 +84,15 @@ internal sealed class Asset
             Status = AssetStatus.InService,
             CommissionedOn = commissionedOn,
         };
+
+        asset.Raise(new AssetRegistered(
+            asset.Id.Value,
+            asset._tag,
+            asset.Name,
+            asset.LineId.Value,
+            asset.Station,
+            asset.Criticality));
+        return asset;
     }
 
     public void UpdateDetails(string name, string manufacturer, string model, string? serialNumber)
@@ -91,21 +102,26 @@ internal sealed class Asset
         Manufacturer = TextRules.Required(manufacturer, "Manufacturer", ManufacturerMaxLength);
         Model = TextRules.Required(model, "Model", ModelMaxLength);
         SerialNumber = TextRules.Optional(serialNumber, "Serial number", SerialNumberMaxLength);
+        Raise(new AssetDetailsUpdated(Id.Value, Name, Manufacturer, Model, SerialNumber));
     }
 
     public void Relocate(Location location)
     {
         ArgumentNullException.ThrowIfNull(location);
         EnsureInService();
+        var from = Location;
         LineId = location.LineId;
         Station = location.Station;
+        Raise(new AssetRelocated(Id.Value, from.LineId.Value, from.Station, LineId.Value, Station));
     }
 
     public void ChangeCriticality(Criticality criticality)
     {
         EnsureInService();
         EnsureDefined(criticality);
+        var from = Criticality;
         Criticality = criticality;
+        Raise(new AssetCriticalityChanged(Id.Value, from, criticality));
     }
 
     /// <param name="on">Date the asset left service.</param>
@@ -128,6 +144,7 @@ internal sealed class Asset
         Status = AssetStatus.Decommissioned;
         DecommissionedOn = on;
         DecommissionReason = trimmedReason;
+        Raise(new AssetDecommissioned(Id.Value, on, trimmedReason));
     }
 
     private static void EnsureDefined(Criticality criticality)

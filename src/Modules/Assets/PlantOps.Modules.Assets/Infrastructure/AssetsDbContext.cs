@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PlantOps.BuildingBlocks.Infrastructure;
 using PlantOps.Modules.Assets.Domain;
 
 namespace PlantOps.Modules.Assets.Infrastructure;
@@ -23,5 +24,6 @@ internal sealed class AssetsDbContext(DbContextOptions<AssetsDbContext> options)
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new AssetConfiguration());
         modelBuilder.ApplyConfiguration(new ProductionLineConfiguration());
+        modelBuilder.ApplyAuditEntries();
     }
 }

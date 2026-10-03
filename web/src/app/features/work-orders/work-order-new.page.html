@@ -1,0 +1,81 @@
+<p><a routerLink="/work-orders">&larr; Back to work orders</a></p>
+<h1>Raise work order</h1>
+
+<form class="raise" novalidate (submit)="onSubmit($event)">
+  <mat-form-field>
+    <mat-label>Asset</mat-label>
+    <input
+      matInput
+      type="text"
+      autocomplete="off"
+      [matAutocomplete]="assetAuto"
+      [errorStateMatcher]="assetErrorMatcher"
+      [value]="assetText()"
+      (input)="onAssetInput($any($event.target).value)"
+      (focus)="onAssetFocus()"
+      (blur)="raiseForm.assetId().markAsTouched()"
+    />
+    <mat-autocomplete
+      #assetAuto="matAutocomplete"
+      (optionSelected)="pickAsset($event.option.value)"
+    >
+      @for (asset of assetOptions(); track asset.id) {
+        <mat-option [value]="asset">{{ assetLabel(asset) }}</mat-option>
+      }
+    </mat-autocomplete>
+    <mat-hint>Type a tag or name to search in-service assets</mat-hint>
+    @for (error of raiseForm.assetId().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Priority</mat-label>
+    <mat-select [formField]="raiseForm.priority">
+      @for (p of priorities; track p) {
+        <mat-option [value]="p">{{ priorityLabels[p] }}</mat-option>
+      }
+    </mat-select>
+    @for (error of raiseForm.priority().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Title</mat-label>
+    <input matInput type="text" [formField]="raiseForm.title" />
+    @for (error of raiseForm.title().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Description</mat-label>
+    <textarea matInput rows="5" [formField]="raiseForm.description"></textarea>
+    @for (error of raiseForm.description().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-checkbox [formField]="raiseForm.assetDown"
+    >The machine is down (production stopped)</mat-checkbox
+  >
+
+  @if (serverError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  }
+
+  <div class="actions">
+    <button
+      mat-flat-button
+      type="submit"
+      [disabled]="raiseForm().invalid() || raiseForm().submitting()"
+    >
+      {{ raiseForm().submitting() ? 'Raising…' : 'Raise work order' }}
+    </button>
+    <a mat-button routerLink="/work-orders">Cancel</a>
+  </div>
+</form>

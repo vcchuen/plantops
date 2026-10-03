@@ -1,0 +1,111 @@
+<p><a routerLink="/work-orders">&larr; Back to work orders</a></p>
+
+@if (detail.isLoading()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Loading work order" />
+}
+
+<p class="visually-hidden" role="status">{{ busy() ? 'Updating work order…' : '' }}</p>
+
+@if (notFound()) {
+  <h1>Work order not found</h1>
+  <p>No work order with that id exists. <a routerLink="/work-orders">Return to the list</a>.</p>
+} @else if (errorMessage(); as message) {
+  <p class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    {{ message }}
+  </p>
+} @else if (detail.hasValue()) {
+  @let w = detail.value();
+  <h1>{{ w.number }} · {{ w.title }}</h1>
+
+  <p class="sla-line">
+    <app-sla-badge [state]="effectiveSla()" />
+    @if (countdown(); as text) {
+      <span class="countdown">{{ text }}</span>
+    }
+  </p>
+
+  @if (actionError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  }
+
+  @if (visibleActions().length > 0) {
+    <div class="actions" role="group" aria-label="Work order actions">
+      @for (action of visibleActions(); track action) {
+        <button
+          mat-flat-button
+          type="button"
+          [disabled]="busy() || detail.isLoading()"
+          (click)="run(action)"
+        >
+          {{ actionLabels[action] }}
+        </button>
+      }
+    </div>
+  }
+
+  <dl>
+    <dt>Status</dt>
+    <dd>{{ statusLabels[w.status] }}</dd>
+    <dt>Priority</dt>
+    <dd>{{ priorityLabels[w.priority] }}</dd>
+    <dt>Asset</dt>
+    <dd>
+      <a [routerLink]="['/assets', w.assetId]">{{ w.assetTag }} — {{ w.assetName }}</a>
+      @if (w.assetDown) {
+        <strong> · Machine down</strong>
+      }
+    </dd>
+    <dt>Description</dt>
+    <dd class="multiline">{{ w.description || '—' }}</dd>
+    <dt>Reported by</dt>
+    <dd>{{ w.reportedBy.name }}</dd>
+    <dt>Submitted</dt>
+    <dd>{{ w.submittedAt | date: 'medium' }}</dd>
+    <dt>Due</dt>
+    <dd>{{ w.dueAt | date: 'medium' }}</dd>
+    <dt>Assignee</dt>
+    <dd>{{ w.assignedTo?.name ?? 'Unassigned' }}</dd>
+    @if (w.approvedBy) {
+      <dt>Approved by</dt>
+      <dd>{{ w.approvedBy.name }}</dd>
+    }
+    @if (w.startedAt) {
+      <dt>Started</dt>
+      <dd>{{ w.startedAt | date: 'medium' }}</dd>
+    }
+    @if (w.completedAt) {
+      <dt>Completed</dt>
+      <dd>{{ w.completedAt | date: 'medium' }}</dd>
+    }
+    @if (w.closedAt) {
+      <dt>Closed</dt>
+      <dd>{{ w.closedAt | date: 'medium' }}</dd>
+    }
+    @if (w.resolution) {
+      <dt>Resolution</dt>
+      <dd class="multiline">{{ w.resolution }}</dd>
+    }
+    @if (w.rejectionReason) {
+      <dt>Rejection reason</dt>
+      <dd class="multiline">{{ w.rejectionReason }}</dd>
+    }
+    @if (w.cancellationReason) {
+      <dt>Cancellation reason</dt>
+      <dd class="multiline">{{ w.cancellationReason }}</dd>
+    }
+  </dl>
+
+  <h2>History</h2>
+  @if (historyError(); as message) {
+    <p class="error" role="alert">
+      <mat-icon aria-hidden="true">error</mat-icon>
+      {{ message }}
+    </p>
+  } @else if (history.hasValue()) {
+    <app-history-timeline [entries]="history.value()" />
+  }
+}

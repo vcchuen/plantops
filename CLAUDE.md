@@ -33,6 +33,9 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 - Auth (M3): BFF cookie (`__Host-plantops`), fallback policy = authenticated, policies in Identity.Contracts, CSRF guard requires `X-CSRF: 1` on unsafe /api requests. Tests use the `X-Test-User` test scheme (tests/PlantOps.Api.Tests/Support/TestAuth.cs). New write endpoints need `.RequireAuthorization(Policies.X)`. Clients in tests must send `X-CSRF`.
 - Keycloak compose wiring (KC_HOSTNAME + BACKCHANNEL_DYNAMIC) and its healthcheck are unverified until compose actually runs.
 - Verify framework-behaviour claims from subagents with a probe. In M3 an agent wrongly claimed `MapJsonKey` doesn't split arrays.
+- M4: domain events + `DomainEventInterceptor` (BuildingBlocks.Infrastructure) write `AuditEntries` per module schema in the same transaction; M5's outbox should extend this interceptor. WorkOrders uses rowversion + ETag/If-Match (412/428). Resource-based auth via `WorkOrderOperations.Work`. JIT user directory in `identity.Users` (upsert in OnTicketReceived).
+- Routing: there is no `/api/{**rest}` catch-all any more. The SPA fallback excludes `/api` by regex. Anonymous unknown `/api` paths return 401 (the fallback policy also covers "no endpoint"); signed-in users get a 404 problem. Integration test clients must always send a JSON body on POST commands.
+- Subagents keep using heredocs despite instructions. Check `git status` for unexpected files after each agent.
 - Angular 22 facts (verified): zoneless by default, OnPush by default (`Default` renamed `Eager`), Vitest default, file naming `app.ts` (no `.component`). Signal Forms and httpResource are stable (`@publicApi 22.0`).
 - Angular test gotcha: with httpResource, call `fixture.detectChanges()` then flush, then `await whenStable()`. Never await whenStable before flushing.
 - `ng add @angular/material` adds Google Fonts links. This matters for the CSP in M8.
@@ -43,7 +46,7 @@ Sonnet subagents implement the code. Haiku subagents handle mechanical work (sca
 | 1 | Foundation & walking skeleton | done (PR #1 — user must merge; auto-merge is blocked by permissions) |
 | 2 | Assets module (DDD basics) | done (PR #2, stacked on m1-foundation) |
 | 3 | Identity & authorisation (Keycloak/OIDC) | done (PR #3, stacked on m2-assets) |
-| 4 | Work order lifecycle | — |
+| 4 | Work order lifecycle | done (PR #4, stacked on m3-identity) |
 | 5 | Inventory + events between modules (outbox) | — |
 | 6 | SLA escalation + preventive maintenance | — |
 | 7 | Reporting (CQRS read side) + EF performance | — |

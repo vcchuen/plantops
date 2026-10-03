@@ -15,6 +15,9 @@ internal sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
         builder.Property<string>(Asset.TagField).HasColumnName("Tag").HasMaxLength(AssetTag.MaxLength);
         builder.Ignore(a => a.Tag);
 
+        // Pending events are in-memory only; the interceptor turns them into AuditEntries.
+        builder.Ignore(a => a.DomainEvents);
+
         builder.Property(a => a.Name).HasMaxLength(Asset.NameMaxLength);
         builder.Property(a => a.Manufacturer).HasMaxLength(Asset.ManufacturerMaxLength);
         builder.Property(a => a.Model).HasMaxLength(Asset.ModelMaxLength);

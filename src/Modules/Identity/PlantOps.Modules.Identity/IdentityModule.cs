@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using PlantOps.BuildingBlocks.Infrastructure;
 using PlantOps.Modules.Identity.Contracts;
 
 namespace PlantOps.Modules.Identity;
@@ -45,7 +47,23 @@ public static class IdentityModule
         services.AddAuthorizationBuilder()
             // Secure by default: an endpoint nobody annotated still requires a signed-in user.
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
-            .AddPolicy(Policies.ManageAssets, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin));
+            .AddPolicy(Policies.ManageAssets, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin))
+            .AddPolicy(Policies.SuperviseWorkOrders, policy => policy.RequireRole(Roles.Supervisor, Roles.Admin));
+
+        services.AddDbContext<IdentityDbContext>(options => options.UseSqlServer(
+            configuration.GetConnectionString("PlantOps"),
+            sql =>
+            {
+                sql.MigrationsHistoryTable("__EFMigrationsHistory", IdentityDbContext.Schema);
+                sql.EnableRetryOnFailure();
+            }));
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
+        services.AddScoped<IUserDirectory, UserDirectory>();
+        services.AddScoped<UserProvisioner>();
+        services.AddMigrateOnStartup<IdentityDbContext>();
+        services.AddHealthChecks().AddDbContextCheck<IdentityDbContext>("identity-db", tags: ["ready"]);
 
         return services;
     }

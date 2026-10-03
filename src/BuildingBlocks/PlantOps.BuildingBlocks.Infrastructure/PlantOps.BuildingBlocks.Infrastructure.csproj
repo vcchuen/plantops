@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Brings EF Core + the relational extensions (ToTable, Migrate) this building block needs. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlantOps.SharedKernel\PlantOps.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>
