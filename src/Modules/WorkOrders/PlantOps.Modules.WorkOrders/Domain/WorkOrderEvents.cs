@@ -24,8 +24,20 @@ internal sealed record WorkOrderAssigned(
 
 internal sealed record WorkOrderStarted(Guid WorkOrderId) : IDomainEvent;
 
-internal sealed record WorkOrderCompleted(Guid WorkOrderId, string Resolution) : IDomainEvent;
+// Completed and Cancelled carry everything their integration events need: the mapper sees only the event, and
+// consumers must never have to call back into WorkOrders. The audit payload simply gains these fields.
+internal sealed record WorkOrderCompleted(
+    Guid WorkOrderId,
+    string Resolution,
+    string Number,
+    Guid AssetId,
+    string Title,
+    DateTimeOffset SubmittedAt,
+    DateTimeOffset StartedAt,
+    DateTimeOffset CompletedAt,
+    string TechnicianName,
+    bool AssetDown) : IDomainEvent;
 
 internal sealed record WorkOrderClosed(Guid WorkOrderId) : IDomainEvent;
 
-internal sealed record WorkOrderCancelled(Guid WorkOrderId, string Reason) : IDomainEvent;
+internal sealed record WorkOrderCancelled(Guid WorkOrderId, string Number, string Reason, DateTimeOffset CancelledAt) : IDomainEvent;
