@@ -62,7 +62,7 @@
     @if (w.source === 'Preventive') {
       <dt>PM due</dt>
       <dd>
-        {{ w.pmDueOn | date: 'mediumDate' : 'UTC' }}
+        {{ w.pmDueOn | date: 'mediumDate' }}
         @if (w.pmScheduleId) {
           · <a [routerLink]="['/pm-schedules', w.pmScheduleId]">View PM schedule</a>
         }

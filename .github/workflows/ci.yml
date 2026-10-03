@@ -43,11 +43,15 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npm run lint
-      # A zone west of UTC: date-only values ("2026-10-20") parsed as UTC midnight would render as the previous
-      # day here, so this catches timezone bugs that UTC runners and UTC+8 laptops never show.
+      # Run the suite on both sides of UTC. Date bugs are directional: parsing "2026-10-20" as UTC midnight shows
+      # the previous day west of UTC, while formatting a local date in UTC shows the previous day east of it
+      # (the factory is UTC+8). A UTC CI runner sees neither.
       - run: npm test
         env:
           TZ: America/Los_Angeles
+      - run: npm test
+        env:
+          TZ: Asia/Kuala_Lumpur
       - run: npm run build
 
   container:
