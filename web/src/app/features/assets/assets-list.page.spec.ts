@@ -117,6 +117,15 @@ describe('AssetsListPage', () => {
     expect(alert?.textContent).toContain('pageSize must be at most 100');
   });
 
+  it('shows a permission message on 403', async () => {
+    create();
+    http.expectOne('/api/assets/lines').flush([]);
+    listReq().flush(null, { status: 403, statusText: 'Forbidden' });
+    await fixture.whenStable();
+
+    expect(el.querySelector('[role="alert"]')?.textContent).toContain("You don't have permission");
+  });
+
   it('shows a generic alert when the error body is not a problem', async () => {
     create();
     http.expectOne('/api/assets/lines').flush([]);

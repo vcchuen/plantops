@@ -15,6 +15,13 @@
       </button>
     }
     <span>PlantOps</span>
+    <span class="spacer"></span>
+    @if (session.isAuthenticated()) {
+      <span class="user">{{ session.displayName() }} · {{ session.roles().join(', ') }}</span>
+      <button mat-button type="button" (click)="session.logout()">Sign out</button>
+    } @else if (session.status() === 'anonymous') {
+      <button mat-button type="button" (click)="signIn()">Sign in</button>
+    }
   </mat-toolbar>
 </header>
 
