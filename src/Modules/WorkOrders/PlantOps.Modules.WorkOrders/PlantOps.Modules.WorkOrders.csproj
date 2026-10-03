@@ -25,6 +25,8 @@
     <InternalsVisibleTo Include="PlantOps.Modules.WorkOrders.Tests" />
     <InternalsVisibleTo Include="PlantOps.Modules.Inventory.Tests" />
     <InternalsVisibleTo Include="PlantOps.Modules.Reporting.Tests" />
+    <InternalsVisibleTo Include="PlantOps.Perf" />
+    <InternalsVisibleTo Include="PlantOps.Perf.Tests" />
   </ItemGroup>
 
 </Project>
