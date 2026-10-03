@@ -415,4 +415,51 @@ public class AssetsApiTests(SqlServerFixture fixture)
 
         await AssertProblem(response, HttpStatusCode.BadRequest);
     }
+
+    [IntegrationFact]
+    public async Task History_lists_events_newest_first_with_actor_and_payload()
+    {
+        using var sam = CreateClient();
+        using var ada = fixture.Factory.CreateClient().AsUser("Ada", Roles.Admin).WithCsrf();
+        var id = await RegisterAndGetId(sam, NewAssetBody(NewPrefix() + "-H1", Smt1, "B"));
+        Assert.Equal(HttpStatusCode.NoContent, (await ada.PostAsJsonAsync($"/api/assets/{id}/criticality", new { criticality = "A" }, Ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await sam.PostAsJsonAsync($"/api/assets/{id}/relocate", new { lineId = Fa1, station = "Station 7" }, Ct)).StatusCode);
+
+        var history = await sam.GetFromJsonAsync<JsonElement>($"/api/assets/{id}/history", Ct);
+
+        var entries = history.EnumerateArray().ToList();
+        Assert.Equal(["AssetRelocated", "AssetCriticalityChanged", "AssetRegistered"], entries.Select(e => e.GetProperty("eventType").GetString()));
+        Assert.Equal(["Sam", "Ada", "Sam"], entries.Select(e => e.GetProperty("actorName").GetString()));
+        Assert.True(entries[0].GetProperty("occurredAt").GetDateTimeOffset() >= entries[2].GetProperty("occurredAt").GetDateTimeOffset());
+        // The payload is a nested JSON object (not an escaped string) carrying the new values.
+        var relocated = entries[0].GetProperty("payload");
+        Assert.Equal(JsonValueKind.Object, relocated.ValueKind);
+        Assert.Equal(Fa1, relocated.GetProperty("lineId").GetGuid());
+        Assert.Equal("Station 7", relocated.GetProperty("station").GetString());
+        var criticality = entries[1].GetProperty("payload");
+        Assert.Equal("B", criticality.GetProperty("from").GetString());
+        Assert.Equal("A", criticality.GetProperty("to").GetString());
+    }
+
+    [IntegrationFact]
+    public async Task History_of_an_unknown_asset_returns_404()
+    {
+        using var client = CreateClient();
+
+        var response = await client.GetAsync($"/api/assets/{Guid.NewGuid()}/history", Ct);
+
+        await AssertProblem(response, HttpStatusCode.NotFound);
+    }
+
+    [IntegrationFact]
+    public async Task History_is_readable_by_an_operator()
+    {
+        using var sam = CreateClient();
+        var id = await RegisterAndGetId(sam, NewAssetBody(NewPrefix() + "-H2"));
+        using var operatorClient = fixture.Factory.CreateClient().AsUser("Olivia", Roles.Operator);
+
+        var response = await operatorClient.GetAsync($"/api/assets/{id}/history", Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }

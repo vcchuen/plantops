@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using PlantOps.BuildingBlocks.Infrastructure;
 using PlantOps.Modules.Assets.Domain;
 using PlantOps.Modules.Assets.Infrastructure;
 using PlantOps.Modules.Identity.Contracts;
@@ -26,6 +27,7 @@ internal static class AssetEndpoints
         group.MapGet("/lines", ListLines);
         group.MapGet("", ListAssets);
         group.MapGet("/{id:guid}", GetAsset).ProducesProblem(StatusCodes.Status404NotFound);
+        group.MapGet("/{id:guid}/history", GetHistory).ProducesProblem(StatusCodes.Status404NotFound);
         group.MapPost("", RegisterAsset).ProducesProblem(StatusCodes.Status409Conflict)
             .RequireAuthorization(Policies.ManageAssets);
         group.MapPut("/{id:guid}/details", UpdateDetails).ProducesProblem(StatusCodes.Status404NotFound)
@@ -114,6 +116,16 @@ internal static class AssetEndpoints
         var detail = await QueryDetail(db, new AssetId(id), ct)
             ?? throw new NotFoundException($"Asset '{id}' was not found.");
         return TypedResults.Ok(detail);
+    }
+
+    private static async Task<Ok<IReadOnlyList<AuditHistoryItem>>> GetHistory(Guid id, AssetsDbContext db, CancellationToken ct)
+    {
+        if (!await db.Assets.AnyAsync(a => a.Id == new AssetId(id), ct))
+        {
+            throw new NotFoundException($"Asset '{id}' was not found.");
+        }
+
+        return TypedResults.Ok(await db.ForAggregateAsync(id.ToString(), ct));
     }
 
     private static async Task<Created<AssetDetail>> RegisterAsset(
