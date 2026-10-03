@@ -13,6 +13,7 @@ dist/
 coverage/
 playwright-report/
 test-results/
+web/e2e/.auth/
 
 # Env / secrets
 .env
