@@ -1,0 +1,286 @@
+name: deploy
+
+# Manual only. Deploying is a human decision, and the GitHub environment "production" can require reviewers.
+# Authentication is GitHub OIDC (a federated credential on an Entra app registration): there is no Azure secret in GitHub,
+# only three IDs. See deploy/azure/README.md. NOTHING in this workflow has run yet: nothing has been deployed.
+on:
+  workflow_dispatch:
+    inputs:
+      resourceGroup:
+        description: Existing resource group to deploy into
+        required: true
+        default: plantops-rg
+      appServiceSku:
+        description: Web app plan (F1 has no Always On)
+        type: choice
+        options: [B1, F1]
+        default: B1
+      sqlAdminObjectId:
+        description: Object ID of the Entra principal GitHub logs in as (Enterprise app / service principal), NOT its client ID
+        required: true
+      sqlAdminLogin:
+        description: Display name of that principal
+        required: true
+        default: plantops-deploy
+      authAuthority:
+        description: OIDC authority, e.g. https://login.microsoftonline.com/TENANT_ID/v2.0
+        required: true
+      authClientId:
+        description: Client ID of the web sign-in app registration
+        required: true
+
+permissions:
+  id-token: write # request the OIDC token azure/login exchanges for an Azure token
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  DB_NAME: PlantOps
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions are pinned to commit SHAs: a tag can be re-pointed by whoever controls the repo.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build the Angular app
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish the API with the SPA in wwwroot, then zip
+        run: |
+          dotnet publish src/Host/PlantOps.Api/PlantOps.Api.csproj -c Release -o publish/api
+          mkdir -p publish/api/wwwroot
+          cp -r web/dist/plantops-web/browser/. publish/api/wwwroot/
+          (cd publish/api && zip -qr ../api.zip .)
+
+      - name: Publish the Functions app, then zip
+        run: |
+          dotnet publish src/Functions/PlantOps.Functions/PlantOps.Functions.csproj -c Release -o publish/func
+          (cd publish/func && zip -qr ../func.zip .)
+
+      # One self-contained bundle per module (ADR-0004). The local dotnet-ef tool is pinned in .config/dotnet-tools.json.
+      # The Api is the startup project, so the module registrations build the DbContexts; the connection string below is
+      # a placeholder that is never connected to (a bundle is built offline; the real one is passed when it runs).
+      - name: Build EF migration bundles
+        env:
+          ConnectionStrings__PlantOps: "Server=localhost;Database=PlantOps;Trusted_Connection=True"
+        run: |
+          dotnet tool restore
+          mkdir -p publish/bundles
+          for entry in Assets:Assets Identity:Identity WorkOrders:WorkOrders Inventory:Inventory Reporting:Reporting; do
+            module="${entry%%:*}"
+            dotnet ef migrations bundle \
+              --project "src/Modules/${module}/PlantOps.Modules.${module}" \
+              --startup-project src/Host/PlantOps.Api \
+              --context "${module}DbContext" \
+              --configuration Release \
+              --output "publish/bundles/efbundle-${module}" \
+              --self-contained -r linux-x64 --force
+          done
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: package
+          path: |
+            publish/api.zip
+            publish/func.zip
+            publish/bundles/
+          if-no-files-found: error
+          retention-days: 7
+
+  infra:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      webAppName: ${{ steps.out.outputs.webAppName }}
+      webAppUrl: ${{ steps.out.outputs.webAppUrl }}
+      functionAppName: ${{ steps.out.outputs.functionAppName }}
+      sqlServerName: ${{ steps.out.outputs.sqlServerName }}
+      sqlServerFqdn: ${{ steps.out.outputs.sqlServerFqdn }}
+      webPrincipalId: ${{ steps.out.outputs.webPrincipalId }}
+      functionPrincipalId: ${{ steps.out.outputs.functionPrincipalId }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: azure/login@053f7285eb20bf5469ef084617b0b24d3cec53fc # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy Bicep
+        id: out
+        env:
+          RG: ${{ inputs.resourceGroup }}
+          SKU: ${{ inputs.appServiceSku }}
+          SQL_ADMIN_OID: ${{ inputs.sqlAdminObjectId }}
+          SQL_ADMIN_LOGIN: ${{ inputs.sqlAdminLogin }}
+          AUTH_AUTHORITY: ${{ inputs.authAuthority }}
+          AUTH_CLIENT_ID: ${{ inputs.authClientId }}
+        run: |
+          # Inputs override the placeholders in the parameters file (the last -p wins).
+          outputs=$(az deployment group create \
+            --resource-group "$RG" \
+            --name "plantops-${GITHUB_RUN_ID}" \
+            --template-file deploy/azure/main.bicep \
+            --parameters @deploy/azure/main.parameters.json \
+            --parameters appServiceSku="$SKU" sqlAdminObjectId="$SQL_ADMIN_OID" sqlAdminLogin="$SQL_ADMIN_LOGIN" \
+                         authAuthority="$AUTH_AUTHORITY" authClientId="$AUTH_CLIENT_ID" \
+            --query properties.outputs --output json)
+          for key in webAppName webAppUrl functionAppName sqlServerName sqlServerFqdn webPrincipalId functionPrincipalId; do
+            echo "${key}=$(echo "$outputs" | jq -r ".${key}.value")" >> "$GITHUB_OUTPUT"
+          done
+
+  migrate:
+    needs: infra
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: package
+      - uses: azure/login@053f7285eb20bf5469ef084617b0b24d3cec53fc # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Install go-sqlcmd (pinned release, checksum verified)
+        run: |
+          curl -fsSL -o sqlcmd.tar.bz2 https://github.com/microsoft/go-sqlcmd/releases/download/v1.10.0/sqlcmd-linux-amd64.tar.bz2
+          echo "92516d98c63d99b0994de5b61350c91f6915f9b76f139a59039fbcb225c2e987  sqlcmd.tar.bz2" | sha256sum -c -
+          tar -xjf sqlcmd.tar.bz2 sqlcmd
+          sudo install -m 0755 sqlcmd /usr/local/bin/sqlcmd
+      - name: Allow this runner through the SQL firewall (removed at the end)
+        env:
+          RG: ${{ inputs.resourceGroup }}
+          SERVER: ${{ needs.infra.outputs.sqlServerName }}
+        run: |
+          ip=$(curl -fsS https://api.ipify.org)
+          echo "::add-mask::$ip"
+          az sql server firewall-rule create --resource-group "$RG" --server "$SERVER" \
+            --name "gha-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --start-ip-address "$ip" --end-ip-address "$ip"
+      - name: Wake the database (the free offer auto-pauses; the first connection after a pause can fail)
+        env:
+          FQDN: ${{ needs.infra.outputs.sqlServerFqdn }}
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if sqlcmd -S "$FQDN" -d "$DB_NAME" -G -b -Q "SELECT 1" > /dev/null; then exit 0; fi
+            echo "Database not ready (attempt $i), waiting 20s"
+            sleep 20
+          done
+          echo "::error::Database did not come online"
+          exit 1
+      - name: Apply migrations (as the deploy identity, which is the SQL Entra admin)
+        env:
+          FQDN: ${{ needs.infra.outputs.sqlServerFqdn }}
+        run: |
+          conn="Server=tcp:${FQDN},1433;Database=${DB_NAME};Authentication=Active Directory Default;Encrypt=True"
+          for module in Assets Identity WorkOrders Inventory Reporting; do
+            chmod +x "bundles/efbundle-${module}"
+            "./bundles/efbundle-${module}" --connection "$conn"
+          done
+      - name: Remove the runner firewall rule
+        if: always()
+        env:
+          RG: ${{ inputs.resourceGroup }}
+          SERVER: ${{ needs.infra.outputs.sqlServerName }}
+        run: az sql server firewall-rule delete --resource-group "$RG" --server "$SERVER" --name "gha-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" || true
+
+  grant:
+    needs: [infra, migrate]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: azure/login@053f7285eb20bf5469ef084617b0b24d3cec53fc # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Install go-sqlcmd (pinned release, checksum verified)
+        run: |
+          curl -fsSL -o sqlcmd.tar.bz2 https://github.com/microsoft/go-sqlcmd/releases/download/v1.10.0/sqlcmd-linux-amd64.tar.bz2
+          echo "92516d98c63d99b0994de5b61350c91f6915f9b76f139a59039fbcb225c2e987  sqlcmd.tar.bz2" | sha256sum -c -
+          tar -xjf sqlcmd.tar.bz2 sqlcmd
+          sudo install -m 0755 sqlcmd /usr/local/bin/sqlcmd
+      - name: Allow this runner through the SQL firewall (removed at the end)
+        env:
+          RG: ${{ inputs.resourceGroup }}
+          SERVER: ${{ needs.infra.outputs.sqlServerName }}
+        run: |
+          ip=$(curl -fsS https://api.ipify.org)
+          echo "::add-mask::$ip"
+          az sql server firewall-rule create --resource-group "$RG" --server "$SERVER" \
+            --name "gha-grant-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --start-ip-address "$ip" --end-ip-address "$ip"
+      # -G with no user or password: go-sqlcmd uses DefaultAzureCredential, which picks up the az login above.
+      - name: Grant the app identities (idempotent)
+        env:
+          FQDN: ${{ needs.infra.outputs.sqlServerFqdn }}
+          WEB_APP: ${{ needs.infra.outputs.webAppName }}
+          WEB_OID: ${{ needs.infra.outputs.webPrincipalId }}
+          FUNC_APP: ${{ needs.infra.outputs.functionAppName }}
+          FUNC_OID: ${{ needs.infra.outputs.functionPrincipalId }}
+        run: |
+          sqlcmd -S "$FQDN" -d "$DB_NAME" -G -b -i deploy/azure/sql/grant-app-identities.sql \
+            -v WEB_APP_NAME="$WEB_APP" WEB_OBJECT_ID="$WEB_OID" FUNC_APP_NAME="$FUNC_APP" FUNC_OBJECT_ID="$FUNC_OID"
+      - name: Remove the runner firewall rule
+        if: always()
+        env:
+          RG: ${{ inputs.resourceGroup }}
+          SERVER: ${{ needs.infra.outputs.sqlServerName }}
+        run: az sql server firewall-rule delete --resource-group "$RG" --server "$SERVER" --name "gha-grant-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" || true
+
+  deploy:
+    needs: [infra, grant]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: package
+      - uses: azure/login@053f7285eb20bf5469ef084617b0b24d3cec53fc # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: azure/webapps-deploy@02a81bead70021f5284939794bcec79c271ab383 # v3.0.8
+        with:
+          app-name: ${{ needs.infra.outputs.webAppName }}
+          package: api.zip
+      - uses: Azure/functions-action@f9b4a151693661b043f188d9440fb20ed5fa7156 # v1.5.7
+        with:
+          app-name: ${{ needs.infra.outputs.functionAppName }}
+          package: func.zip
+          sku: flexconsumption
+
+  smoke:
+    needs: [infra, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      # /health/ready is anonymous by design and checks every module's database, so 200 proves the app, the identity and the schema.
+      - name: Wait for /health/ready
+        env:
+          URL: ${{ needs.infra.outputs.webAppUrl }}
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/health/ready" || true)
+            echo "attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "::error::$URL/health/ready never returned 200"
+          exit 1
